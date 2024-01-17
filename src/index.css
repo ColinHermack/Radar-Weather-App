@@ -9,27 +9,23 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-weight: 200;
+  font-weight: 250;
 }
 
 /* Background styling */
-#background-image {
-  position: absolute;
+#background-image-container {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
   z-index: -2;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
 }
 
-#background-cover {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(40, 40, 40, 0.5);
+#background-image {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
 }
 
 /* Location entry styling */
@@ -76,4 +72,99 @@ body {
   background-color: black;
 }
 
+/* Main Page Styling */
+#locations-list {
+  width: 18vw;
+  height: 100vh;
+  background-color: rgba(30, 30, 30, 0.5);
+  border-right: 0.5px solid rgb(120, 120, 120);
+  position: fixed;
+  left: 0;
+  top: 0;
+}
 
+#current-location-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: top;
+  align-items: center;
+  width: 82vw;
+  position: relative;
+  left: 18vw;
+}
+
+#weather-header {
+  width: 100%;
+  height: 25vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--main-text-color);
+  font-weight: 400;
+  text-shadow: 2px 2px 5px rgb(180, 180, 180);
+}
+
+#weather-header #city {
+  font-size: 1.6em;
+}
+
+#current-temperature {
+  font-size: 3em;
+  font-weight: 250;
+  position: relative;
+  left: 5px;
+}
+
+#current-conditions {
+  font-weight: 350;
+}
+
+#weather-details-container {
+  width: 80%;
+  display: grid;
+  gap: 20px 20px;
+  margin-top: 50px;
+  height: 700px;
+}
+
+.weather-details-box {
+  background-color: rgba(120, 120, 120, 0.3);
+  backdrop-filter: blur(2px);
+  border-radius: 15px;
+}
+
+#hourly-forecast {
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 1;
+  grid-column-end: 7;
+}
+
+#seven-day-forecast {
+  grid-row-start: 2;
+  grid-row-end: 5;
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+#air-quality {
+  grid-row-start: 2;
+  grid-row-end: 3;
+  grid-column-start: 3;
+  grid-column-end: 5;
+}
+
+#wind {
+  grid-row-start: 3;
+  grid-row-end: 4;
+  grid-column-start: 3;
+  grid-column-end: 5;
+}
+
+#small-radar-viewer {
+  grid-row-start: 2;
+  grid-row-end: 4;
+  grid-column-start: 5;
+  grid-column-end: 7;
+}
