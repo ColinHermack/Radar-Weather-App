@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import rockyMountain from "./media/RockyMountain.jpg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faChalkboard } from '@fortawesome/free-solid-svg-icons';
 
 
 class App extends React.Component {
@@ -21,6 +21,7 @@ class App extends React.Component {
         low: "--",
         weatherCode: undefined
       },
+      hourlyWeather: []
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
@@ -118,11 +119,11 @@ class App extends React.Component {
           }
         })
         let hourlyWeather = []
-        for (let i = 0; i < 47; i++) {
+        for (let i = 0; i < 48; i++) {
           hourlyWeather.push({
-            month: data.hourly.time.slice(5, 7),
-            day: data.hourly.time.slice(8, 10),
-            time: data.hourly.time.slice(11),
+            month: data.hourly.time[i].slice(5, 7),
+            day: data.hourly.time[i].slice(8, 10),
+            time: data.hourly.time[i].slice(11),
             temperature: Math.round(data.hourly.temperature_2m[i]),
             weatherCode: data.hourly.weather_code[i],
             precipitationProbability: data.hourly.precipitation_probability[i]
@@ -132,6 +133,7 @@ class App extends React.Component {
           hourlyWeather: hourlyWeather
         })
       })
+      .catch((error) => {console.log(error)})
 
     //Get location data and forecast descriptions from the National Weather Service API
     fetch(`https://api.weather.gov/points/${latitude},${longitude}`)
@@ -149,6 +151,7 @@ class App extends React.Component {
               forecastDiscussion: data
             })
           })
+          .catch((error) => {console.log(error)})
         //Get the NWS forecast
         fetch(data.properties.forecast)
           .then((response) => response.json())
@@ -157,7 +160,11 @@ class App extends React.Component {
               forecastDescription: data.properties.periods[0].detailedForecast
             })
           })
+          .catch((error) => {
+            this.setState({forecastDescription: "Not available"})
+          })
       })
+      .catch((error) => {console.log(error)})
 
   }
 
@@ -186,8 +193,28 @@ class App extends React.Component {
           <div id='high-low'>H:{this.state.currentWeather.high}° L:{this.state.currentWeather.low}°</div>
         </div>
         <div id='weather-details-container'>
-          <div id='forecast-description' className='weather-details-box'><p>{this.state.forecastDescription}</p></div>
-          <div id='hourly-forecast' className='weather-details-box'></div>
+          <div id='forecast-description' className='weather-details-box'>
+            <h1 className='weather-details-heading'><FontAwesomeIcon icon={faChalkboard}/> SUMMARY</h1>
+            <div className='divider'></div>
+            <p>{this.state.forecastDescription}</p>
+          </div>
+          <div id='hourly-forecast' className='weather-details-box'>{
+            this.state.hourlyWeather.map((item) => {
+              let date = new Date();
+              if (date.getDate() == item.day && date.getHours() == item.time.slice(0, 2)) {
+                return(<div className='hourly-weather-container' key={item.day + " " + item.time} style={{backgroundColor: "rgba(120, 120, 120, 0.5)"}}>
+                <div className='hourly-time'>{item.time}</div>
+                <div className='hourly-icon'></div>
+                <div className='hourly-temperature'>{item.temperature}°</div>
+              </div>)
+              }
+              return(<div className='hourly-weather-container' key={item.day + " " + item.time}>
+                <div className='hourly-time'>{item.time}</div>
+                <div className='hourly-icon'></div>
+                <div className='hourly-temperature'>{item.temperature}°</div>
+              </div>)
+            })
+          }</div>
           <div id='seven-day-forecast' className='weather-details-box'></div>
           <div id='air-quality' className='weather-details-box'></div>
           <div id='wind' className='weather-details-box'></div>

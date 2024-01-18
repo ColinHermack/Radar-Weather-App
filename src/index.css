@@ -135,6 +135,21 @@ body {
   border-radius: 15px;
   color: var(--main-text-color);
   font-size: 0.85em;
+  font-weight: 500;
+}
+
+.weather-details-box h1 {
+  color: rgba(200, 200, 200, 0.8);
+  font-size: 0.8em;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+.divider {
+  width: calc(100% - 20px);
+  height: 0.5px;
+  background-color: var(--main-text-color);
+  margin-left: 10px;
 }
 
 #forecast-description {
@@ -145,12 +160,13 @@ body {
   width: 320px;
   height: 144px;
   display: flex;
-  justify-content: center;
-  align-items: top;
+  flex-direction: column;
+  justify-content: top;
+  align-items: left;
 }
 
 #forecast-description p {
-  padding: 10px;
+  padding-left: 10px;
 }
 
 #hourly-forecast {
@@ -158,8 +174,15 @@ body {
   grid-row-end: 2;
   grid-column-start: 3;
   grid-column-end: 7;
-  width: 640px;
+  width: 660px;
   height: 144px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  align-items: center;
 }
 
 #seven-day-forecast {
@@ -268,4 +291,14 @@ body {
   grid-column-end: 7;
   width: 150px;
   height: 144px;
+}
+
+.hourly-weather-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 65%;
+  padding: 6.25px;
+  border-radius: 6.25px;
 }
