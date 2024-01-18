@@ -112,12 +112,28 @@ class App extends React.Component {
           currentWeather: {
             temperature: Math.round(data.current.temperature_2m),
             weatherCode: data.current.weather_code,
-            summary: getDescriptionFromWeatherCode(data.current.weather_code)
+            summary: getDescriptionFromWeatherCode(data.current.weather_code),
+            high: Math.round(data.daily.temperature_2m_max[0]),
+            low: Math.round(data.daily.temperature_2m_min[0])
           }
+        })
+        let hourlyWeather = []
+        for (let i = 0; i < 47; i++) {
+          hourlyWeather.push({
+            month: data.hourly.time.slice(5, 7),
+            day: data.hourly.time.slice(8, 10),
+            time: data.hourly.time.slice(11),
+            temperature: Math.round(data.hourly.temperature_2m[i]),
+            weatherCode: data.hourly.weather_code[i],
+            precipitationProbability: data.hourly.precipitation_probability[i]
+          })
+        }
+        this.setState({
+          hourlyWeather: hourlyWeather
         })
       })
 
-    //Get location data from the National Weather Service API
+    //Get location data and forecast descriptions from the National Weather Service API
     fetch(`https://api.weather.gov/points/${latitude},${longitude}`)
       .then(response => response.json())
       .then(data => {
@@ -127,8 +143,20 @@ class App extends React.Component {
         })
         //Get the forecast discussion and parse the HTML to extract the actual text of the forecast discussion
         fetch(`https://forecast.weather.gov/product.php?site=${data.properties.cwa}&issuedby=${data.properties.cwa}&product=AFD&format=ci&version=1&glossary=1`)
-        .then((response) => response.text())
-        .then((data) => {console.log(data)})
+          .then((response) => response.text())
+          .then((data) => {
+            this.setState({
+              forecastDiscussion: data
+            })
+          })
+        //Get the NWS forecast
+        fetch(data.properties.forecast)
+          .then((response) => response.json())
+          .then((data) => {
+            this.setState({
+              forecastDescription: data.properties.periods[0].detailedForecast
+            })
+          })
       })
 
   }
@@ -155,13 +183,22 @@ class App extends React.Component {
           <div id='city'>{this.state.city}</div>
           <div id='current-temperature'>{this.state.currentWeather.temperature}°</div>
           <div id='current-conditions'>{this.state.currentWeather.summary}</div>
-          <div id='high-low'><div id='high'>{this.state.currentWeather.high}</div><div id='low'>{this.state.currentWeather.low}</div></div>
+          <div id='high-low'>H:{this.state.currentWeather.high}° L:{this.state.currentWeather.low}°</div>
         </div>
         <div id='weather-details-container'>
+          <div id='forecast-description' className='weather-details-box'><p>{this.state.forecastDescription}</p></div>
           <div id='hourly-forecast' className='weather-details-box'></div>
           <div id='seven-day-forecast' className='weather-details-box'></div>
           <div id='air-quality' className='weather-details-box'></div>
           <div id='wind' className='weather-details-box'></div>
+          <div id='sunrise-sunset' className='weather-details-box'></div>
+          <div id='precipitation' className='weather-details-box'></div>
+          <div id='apparent-temperature' className='weather-details-box'></div>
+          <div id='humidity' className='weather-details-box'></div>
+          <div id='severe-weather' className='weather-details-box'></div>
+          <div id='forecast-discussion' className='weather-details-box'></div>
+          <div id='visibility' className='weather-details-box'></div>
+          <div id='pressure' className='weather-details-box'></div>
           <SmallRadar/>
         </div>
       </div>
