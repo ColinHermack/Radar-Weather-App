@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import rockyMountain from "./media/RockyMountain.jpg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faChalkboard } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, faIcicles, faCloudBolt } from '@fortawesome/free-solid-svg-icons';
 
 
 class App extends React.Component {
@@ -39,15 +39,13 @@ class App extends React.Component {
   //Get the user's ZIP code if browser blocks coordinate geolocation
   getLocationPage() {
     const getCoordinatesByZip = () => {
-      let zip = document.getElementById('enter-zip').value;
-      const request = new XMLHttpRequest("");
-      request.open("GET",`https://www.zipcodeapi.com/rest/${process.env.REACT_APP_ZIP_API_KEY}/info.json/${zip}/degrees`,true);
-      request.send();
-      request.onload = () => {
-        const json = JSON.parse(request.responseText);
-        this.populateData(json.lat, json.lng);
-      };
-    }
+      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${document.getElementById('enter-zip').value}&count=10&language=en&format=json`)
+        .then(response => response.json())
+        .then((data) => {
+          this.populateData(data.results[0].latitude, data.results[0].longitude);
+        })
+        .catch((error) => {console.log(error)})
+      }
 
     return (<div id='location-container'>
       <div id='background-image-container'><img src={rockyMountain} alt='' id='background-image'></img></div>
@@ -126,7 +124,8 @@ class App extends React.Component {
             time: data.hourly.time[i].slice(11),
             temperature: Math.round(data.hourly.temperature_2m[i]),
             weatherCode: data.hourly.weather_code[i],
-            precipitationProbability: data.hourly.precipitation_probability[i]
+            precipitationProbability: data.hourly.precipitation_probability[i],
+            isDay: data.hourly.is_day[i]
           })
         }
         this.setState({
@@ -181,6 +180,48 @@ class App extends React.Component {
       return (<div id='small-radar-viewer' className='weather-details-box'></div>)
     }
 
+    const GetWeatherIcon = (code, isDay) => {
+      if (code < 2) {  // Clear
+        if (isDay) {
+          return <FontAwesomeIcon icon={faSun} />
+        } else {
+          return <FontAwesomeIcon icon={faMoon} />
+        }
+      } else if (code === 3) {  // Cloudy
+        return <FontAwesomeIcon icon={faCloud} />
+      } else if (code >= 4 && code <= 6) {  // Haze
+        return <FontAwesomeIcon icon={faSmog} />
+      } else if ((code >= 7 && code <= 9) || (code >= 30 && code <= 35)) {  // Dust storm
+        return <FontAwesomeIcon icon={faSmog} />
+      } else if (code === 10) {  // Mist
+        return <FontAwesomeIcon icon={faCloudRain} />
+      } else if (code === 11 || code === 12) {  // Fog
+        return <FontAwesomeIcon icon={faSmog} />
+      } else if (code === 20 || (code >= 50 && code <= 59)) {  // Drizzle
+        return <FontAwesomeIcon icon={faCloudRain} />
+      } else if (code === 21) { // Light rain
+        return <FontAwesomeIcon icon={faCloudRain} />
+      } else if (code === 22 || code === 23) {  //Light snow
+        return <FontAwesomeIcon icon={faSnowflake} />
+      } else if (code === 24) {  //Freezing Rain
+        return <FontAwesomeIcon icon={faCloudRain} />
+      } else if (code === 25 || (code >= 60 && code <= 69)) {  //Rain
+        return <FontAwesomeIcon icon={faCloudShowersHeavy} />
+      } else if (code === 26 || (code >= 70 && code <= 78)) {  //Snow
+        return <FontAwesomeIcon icon={faSnowflake} />
+      } else if (code === 27 || code === 79) {  //Hail
+        return <FontAwesomeIcon icon={faIcicles} />
+      } else if (code === 28) {  //Fog
+        return <FontAwesomeIcon icon={faSmog} />
+      } else if (code === 29) {
+        return <FontAwesomeIcon icon={faCloudBolt} />
+      } else if (code >= 36 || code <= 39) {  //Bizzard
+        return <FontAwesomeIcon icon={faSnowflake} />
+      } else if (code >= 40 && code <= 49){
+        return <FontAwesomeIcon icon={faSmog} />
+      }
+    }
+
     return (
     <div id='container'>
       {BackgroundImage()}
@@ -201,16 +242,17 @@ class App extends React.Component {
           <div id='hourly-forecast' className='weather-details-box'>{
             this.state.hourlyWeather.map((item) => {
               let date = new Date();
+              // eslint-disable-next-line
               if (date.getDate() == item.day && date.getHours() == item.time.slice(0, 2)) {
                 return(<div className='hourly-weather-container' key={item.day + " " + item.time} style={{backgroundColor: "rgba(120, 120, 120, 0.5)"}}>
                 <div className='hourly-time'>{item.time}</div>
-                <div className='hourly-icon'></div>
+                <div className='hourly-icon'>{GetWeatherIcon(item.weatherCode, item.isDay)}</div>
                 <div className='hourly-temperature'>{item.temperature}°</div>
               </div>)
               }
               return(<div className='hourly-weather-container' key={item.day + " " + item.time}>
                 <div className='hourly-time'>{item.time}</div>
-                <div className='hourly-icon'></div>
+                <div className='hourly-icon'>{GetWeatherIcon(item.weatherCode, item.isDay)}</div>
                 <div className='hourly-temperature'>{item.temperature}°</div>
               </div>)
             })
