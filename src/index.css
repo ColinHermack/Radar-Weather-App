@@ -12,6 +12,7 @@ body {
   font-weight: 250;
 }
 
+/* Universal styling */
 /* Background styling */
 #background-image-container {
   width: 100vw;
@@ -72,26 +73,7 @@ body {
   background-color: black;
 }
 
-/* Main Page Styling */
-#locations-list {
-  width: 18vw;
-  height: 100vh;
-  background-color: rgba(30, 30, 30, 0.5);
-  border-right: 0.5px solid rgb(120, 120, 120);
-  position: fixed;
-  left: 0;
-  top: 0;
-}
-
-#current-location-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: top;
-  align-items: center;
-  width: 82vw;
-  position: relative;
-  left: 18vw;
-}
+/* Main page styling for all screen sizes */
 
 #weather-header {
   width: 100%;
@@ -157,155 +139,187 @@ body {
   display: none;
 }
 
-/* Desktop specific styling */
-
-#weather-details-container {
-  width: 1000px;
-  display: grid;
-  gap: 20px 20px;
-  margin-top: 50px;
-  height: 800px;
-  margin-bottom: 50px;
+/*Mobile styling */
+@media screen and (max-width: 480px) {
+  #locations-list {
+    display: none;
+  }
 }
 
-#forecast-description {
-  grid-row-start: 1;
-  grid-row-end: 2;
-  grid-column-start: 1;
-  grid-column-end: 3;
-  width: 320px;
-  height: 144px;
-  display: flex;
-  flex-direction: column;
-  justify-content: top;
-  align-items: left;
+/* Table Styling */
+@media screen and (max-width: 991px) {
 }
 
-#forecast-description p {
-  padding-left: 10px;
-}
+/* Desktop Styling */
+@media screen and (min-width: 992px) {
+  #locations-list {
+    width: 18vw;
+    height: 100vh;
+    background-color: rgba(30, 30, 30, 0.5);
+    border-right: 0.5px solid rgb(120, 120, 120);
+    position: fixed;
+    left: 0;
+    top: 0;
+  }
 
-#hourly-forecast {
-  grid-row-start: 1;
-  grid-row-end: 2;
-  grid-column-start: 3;
-  grid-column-end: 7;
-  width: 660px;
-  height: 144px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  display: flex;
-  flex-direction: row;
-  justify-content: left;
-  align-items: center;
-  scrollbar-width: none;
-}
+  #current-location-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+    align-items: center;
+    width: 82vw;
+    position: relative;
+    left: 18vw;
+  }
 
-#seven-day-forecast {
-  grid-row-start: 2;
-  grid-row-end: 5;
-  grid-column-start: 1;
-  grid-column-end: 3;
-  width: 320px;
-  height: 472px;
-}
-
-#air-quality {
-  grid-row-start: 2;
-  grid-row-end: 3;
-  grid-column-start: 3;
-  grid-column-end: 5;
-  width: 320px;
-  height: 144px;
-}
-
-#wind {
-  grid-row-start: 3;
-  grid-row-end: 4;
-  grid-column-start: 3;
-  grid-column-end: 5;
-  width: 320px;
-  height: 144px;
-}
-
-#small-radar-viewer {
-  grid-row-start: 2;
-  grid-row-end: 4;
-  grid-column-start: 5;
-  grid-column-end: 7;
-  width: 320px;
-  height: 308px;
-}
-
-#sunrise-sunset {
-  grid-row-start: 4;
-  grid-row-end: 5;
-  grid-column-start: 3;
-  grid-column-end: 4;
-  width: 150px;
-  height: 144px;
-}
-
-#precipitation {
-  grid-row-start: 4;
-  grid-row-end: 5;
-  grid-column-start: 4;
-  grid-column-end: 5;
-  width: 150px;
-  height: 144px;
-}
-
-#apparent-temperature {
-  grid-row-start: 4;
-  grid-row-end: 5;
-  grid-column-start: 5;
-  grid-column-end: 6;
-  width: 150px;
-  height: 144px;
-}
-
-#humidity {
-  grid-row-start: 4;
-  grid-row-end: 5;
-  grid-column-start: 6;
-  grid-column-end: 7;
-  width: 150px;
-  height: 144px;
-}
-
-#severe-weather {
-  grid-row-start: 5;
-  grid-row-end: 6;
-  grid-column-start: 1;
-  grid-column-end: 3;
-  width: 320px;
-  height: 144px;
-}
-
-#forecast-discussion {
-  grid-row-start: 5;
-  grid-row-end: 6;
-  grid-column-start: 3;
-  grid-column-end: 5;
-  width: 320px;
-  height: 144px;
-}
-
-#visibility {
-  grid-row-start: 5;
-  grid-row-end: 6;
-  grid-column-start: 5;
-  grid-column-end: 6;
-  width: 150px;
-  height: 144px;
-}
-
-#pressure {
-  grid-row-start: 5;
-  grid-row-end: 6;
-  grid-column-start: 6;
-  grid-column-end: 7;
-  width: 150px;
-  height: 144px;
+  #weather-details-container {
+    width: 1000px;
+    display: grid;
+    gap: 20px 20px;
+    margin-top: 50px;
+    height: 800px;
+    margin-bottom: 50px;
+  }
+  
+  #forecast-description {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 144px;
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+    align-items: left;
+  }
+  
+  #forecast-description p {
+    padding-left: 10px;
+  }
+  
+  #hourly-forecast {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 3;
+    grid-column-end: 7;
+    width: 660px;
+    height: 144px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+    scrollbar-width: none;
+  }
+  
+  #seven-day-forecast {
+    grid-row-start: 2;
+    grid-row-end: 5;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 472px;
+  }
+  
+  #air-quality {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 3;
+    grid-column-end: 5;
+    width: 320px;
+    height: 144px;
+  }
+  
+  #wind {
+    grid-row-start: 3;
+    grid-row-end: 4;
+    grid-column-start: 3;
+    grid-column-end: 5;
+    width: 320px;
+    height: 144px;
+  }
+  
+  #small-radar-viewer {
+    grid-row-start: 2;
+    grid-row-end: 4;
+    grid-column-start: 5;
+    grid-column-end: 7;
+    width: 320px;
+    height: 308px;
+  }
+  
+  #sunrise-sunset {
+    grid-row-start: 4;
+    grid-row-end: 5;
+    grid-column-start: 3;
+    grid-column-end: 4;
+    width: 150px;
+    height: 144px;
+  }
+  
+  #precipitation {
+    grid-row-start: 4;
+    grid-row-end: 5;
+    grid-column-start: 4;
+    grid-column-end: 5;
+    width: 150px;
+    height: 144px;
+  }
+  
+  #apparent-temperature {
+    grid-row-start: 4;
+    grid-row-end: 5;
+    grid-column-start: 5;
+    grid-column-end: 6;
+    width: 150px;
+    height: 144px;
+  }
+  
+  #humidity {
+    grid-row-start: 4;
+    grid-row-end: 5;
+    grid-column-start: 6;
+    grid-column-end: 7;
+    width: 150px;
+    height: 144px;
+  }
+  
+  #severe-weather {
+    grid-row-start: 5;
+    grid-row-end: 6;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 144px;
+  }
+  
+  #forecast-discussion {
+    grid-row-start: 5;
+    grid-row-end: 6;
+    grid-column-start: 3;
+    grid-column-end: 5;
+    width: 320px;
+    height: 144px;
+  }
+  
+  #visibility {
+    grid-row-start: 5;
+    grid-row-end: 6;
+    grid-column-start: 5;
+    grid-column-end: 6;
+    width: 150px;
+    height: 144px;
+  }
+  
+  #pressure {
+    grid-row-start: 5;
+    grid-row-end: 6;
+    grid-column-start: 6;
+    grid-column-end: 7;
+    width: 150px;
+    height: 144px;
+  }
 }
