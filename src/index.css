@@ -139,19 +139,199 @@ body {
   display: none;
 }
 
+#forecast-description {
+  display: flex;
+  flex-direction: column;
+  justify-content: top;
+  align-items: left;
+}
+
+#forecast-description p {
+  padding-left: 10px;
+}
+
+#hourly-forecast {
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  align-items: center;
+  scrollbar-width: none;
+}
+
 /*Mobile styling */
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 991px) {
   #locations-list {
     display: none;
   }
+
+  #current-location-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+    align-items: center;
+    width: 90%;
+    margin-left: 5%;
+    position: relative;
+    left: 0;
+    margin-bottom: 50px;
+  }
+
+  #weather-details-container {
+    width: 320px;
+    display: grid;
+    gap: 20px 20px;
+  }
+
+  #forecast-description {
+    display: none;
+  }
+
+  #hourly-forecast {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 150px;
+  }
+
+  #seven-day-forecast {
+    grid-row-start: 3;
+    grid-row-end: 6;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 490px;
+  }
+
+  #air-quality {
+    grid-row-start: 6;
+    grid-row-end: 7;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 150px;
+  }
+
+  #small-radar-viewer {
+    grid-row-start: 7;
+    grid-row-end: 9;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 320px;
+  }
+
+  #sunrise-sunset {
+    grid-row-start: 9;
+    grid-row-end: 10;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    width: 150px;
+    height: 150px;
+  }
+
+  #wind {
+    grid-row-start: 9;
+    grid-row-end: 10;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    width: 150px;
+    height: 150px;
+  }
+
+  #precipitation {
+    grid-row-start: 10;
+    grid-row-end: 11;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    width: 150px;
+    height: 150px;
+  }
+
+  #apparent-temperature {
+    grid-row-start: 10;
+    grid-row-end: 11;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    width: 150px;
+    height: 150px;
+  }
+
+  #humidity {
+    grid-row-start: 11;
+    grid-row-end: 12;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    width: 150px;
+    height: 150px;
+  }
+
+  #pressure {
+    grid-row-start: 11;
+    grid-row-end: 12;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    width: 150px;
+    height: 150px;
+  }
+
+  #severe-weather {
+    grid-row-start: 12;
+    grid-row-end: 13;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    width: 150px;
+    height: 150px;
+  }
+
+  #visibility {
+    grid-row-start: 12;
+    grid-row-end: 13;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    width: 150px;
+    height: 150px;
+  }
+
+  #forecast-discussion {
+    grid-row-start: 13;
+    grid-row-end: 14;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 150px;
+  }
 }
 
-/* Table Styling */
-@media screen and (max-width: 991px) {
+/* Tablet Styling */
+@media screen and (min-width: 992px) and  (max-width: 1199px) {
+  #locations-list {
+    width: 18vw;
+    height: 100vh;
+    background-color: rgba(30, 30, 30, 0.5);
+    border-right: 0.5px solid rgb(120, 120, 120);
+    position: fixed;
+    left: 0;
+    top: 0;
+  }
+
+  #current-location-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+    align-items: center;
+    width: 82vw;
+    position: relative;
+    left: 18vw;
+  }
 }
 
 /* Desktop Styling */
-@media screen and (min-width: 992px) {
+@media screen and (min-width: 1200px) {
   #locations-list {
     width: 18vw;
     height: 100vh;
@@ -188,14 +368,6 @@ body {
     grid-column-end: 3;
     width: 320px;
     height: 144px;
-    display: flex;
-    flex-direction: column;
-    justify-content: top;
-    align-items: left;
-  }
-  
-  #forecast-description p {
-    padding-left: 10px;
   }
   
   #hourly-forecast {
@@ -205,14 +377,6 @@ body {
     grid-column-end: 7;
     width: 660px;
     height: 144px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    display: flex;
-    flex-direction: row;
-    justify-content: left;
-    align-items: center;
-    scrollbar-width: none;
   }
   
   #seven-day-forecast {
