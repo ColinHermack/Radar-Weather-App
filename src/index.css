@@ -308,7 +308,7 @@ body {
 }
 
 /* Tablet Styling */
-@media screen and (min-width: 992px) and  (max-width: 1199px) {
+@media screen and (min-width: 992px) and  (max-width: 1299px) {
   #locations-list {
     width: 18vw;
     height: 100vh;
@@ -328,10 +328,144 @@ body {
     position: relative;
     left: 18vw;
   }
+
+  #weather-details-container {
+    width: 660px;
+    display: grid;
+    gap: 20px 20px;
+    margin-top: 20px;
+    margin-bottom: 50px;
+  }
+
+  #forecast-description {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 1;
+    grid-column-end: 5;
+    width: 660px;
+    height: 150px;
+  }
+
+  #hourly-forecast {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 1;
+    grid-column-end: 5;
+    width: 660px;
+    height: 150px;
+  }
+
+  #seven-day-forecast {
+    grid-row-start: 3;
+    grid-row-end: 6;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 490px;
+  }
+
+  #small-radar-viewer {
+    grid-row-start: 3;
+    grid-row-end: 5;
+    grid-column-start: 3;
+    grid-column-end: 5;
+    width: 320px;
+    height: 320px;
+  }
+
+  #wind {
+    grid-row-start: 5;
+    grid-row-end: 6;
+    grid-column-start: 3;
+    grid-column-end: 5;
+    width: 320px;
+    height: 150px;
+  }
+
+  #severe-weather {
+    grid-row-start: 6;
+    grid-row-end: 7;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 320px;
+    height: 150px;
+  }
+
+  #air-quality {
+    grid-row-start: 6;
+    grid-row-end: 7;
+    grid-column-start: 3;
+    grid-column-end: 5;
+    width: 320px;
+    height: 150px;
+  }
+
+  #apparent-temperature {
+    grid-row-start: 7;
+    grid-row-end: 8;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    width: 150px;
+    height: 150px;
+  }
+
+  #precipitation {
+    grid-row-start: 7;
+    grid-row-end: 8;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    width: 150px;
+    height: 150px;
+  }
+
+  #visibility {
+    grid-row-start: 7;
+    grid-row-end: 8;
+    grid-column-start: 3;
+    grid-column-end: 4;
+    width: 150px;
+    height: 150px;
+  }
+
+  #sunrise-sunset {
+    grid-row-start: 7;
+    grid-row-end: 8;
+    grid-column-start: 4;
+    grid-column-end: 5;
+    width: 150px;
+    height: 150px;
+  }
+
+  #humidity {
+    grid-row-start: 8;
+    grid-row-end: 9;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    width: 150px;
+    height: 150px
+  }
+
+  #pressure {
+    grid-row-start: 8;
+    grid-row-end: 9;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    width: 150px;
+    height: 150px
+  }
+
+  #forecast-discussion {
+    grid-row-start: 8;
+    grid-row-end: 9;
+    grid-column-start: 3;
+    grid-column-end: 5;
+    width: 320px;
+    height: 150px
+  }
 }
 
 /* Desktop Styling */
-@media screen and (min-width: 1200px) {
+@media screen and (min-width: 1300px) {
   #locations-list {
     width: 18vw;
     height: 100vh;
@@ -357,7 +491,6 @@ body {
     display: grid;
     gap: 20px 20px;
     margin-top: 50px;
-    height: 800px;
     margin-bottom: 50px;
   }
   
@@ -365,18 +498,18 @@ body {
     grid-row-start: 1;
     grid-row-end: 2;
     grid-column-start: 1;
-    grid-column-end: 3;
-    width: 320px;
-    height: 144px;
+    grid-column-end: 4;
+    width: 490px;
+    height: 150px;
   }
   
   #hourly-forecast {
     grid-row-start: 1;
     grid-row-end: 2;
-    grid-column-start: 3;
+    grid-column-start: 4;
     grid-column-end: 7;
-    width: 660px;
-    height: 144px;
+    width: 490px;
+    height: 150px;
   }
   
   #seven-day-forecast {
@@ -385,7 +518,7 @@ body {
     grid-column-start: 1;
     grid-column-end: 3;
     width: 320px;
-    height: 472px;
+    height: 490px;
   }
   
   #air-quality {
@@ -394,7 +527,7 @@ body {
     grid-column-start: 3;
     grid-column-end: 5;
     width: 320px;
-    height: 144px;
+    height: 150px;
   }
   
   #wind {
@@ -403,7 +536,7 @@ body {
     grid-column-start: 3;
     grid-column-end: 5;
     width: 320px;
-    height: 144px;
+    height: 150px;
   }
   
   #small-radar-viewer {
@@ -412,7 +545,7 @@ body {
     grid-column-start: 5;
     grid-column-end: 7;
     width: 320px;
-    height: 308px;
+    height: 320px;
   }
   
   #sunrise-sunset {
@@ -421,7 +554,7 @@ body {
     grid-column-start: 3;
     grid-column-end: 4;
     width: 150px;
-    height: 144px;
+    height: 150px;
   }
   
   #precipitation {
@@ -430,7 +563,7 @@ body {
     grid-column-start: 4;
     grid-column-end: 5;
     width: 150px;
-    height: 144px;
+    height: 150px;
   }
   
   #apparent-temperature {
@@ -439,7 +572,7 @@ body {
     grid-column-start: 5;
     grid-column-end: 6;
     width: 150px;
-    height: 144px;
+    height: 150px;
   }
   
   #humidity {
@@ -448,7 +581,7 @@ body {
     grid-column-start: 6;
     grid-column-end: 7;
     width: 150px;
-    height: 144px;
+    height: 150px;
   }
   
   #severe-weather {
@@ -457,7 +590,7 @@ body {
     grid-column-start: 1;
     grid-column-end: 3;
     width: 320px;
-    height: 144px;
+    height: 150px;
   }
   
   #forecast-discussion {
@@ -466,7 +599,7 @@ body {
     grid-column-start: 3;
     grid-column-end: 5;
     width: 320px;
-    height: 144px;
+    height: 150px;
   }
   
   #visibility {
@@ -475,7 +608,7 @@ body {
     grid-column-start: 5;
     grid-column-end: 6;
     width: 150px;
-    height: 144px;
+    height: 150px;
   }
   
   #pressure {
@@ -484,6 +617,6 @@ body {
     grid-column-start: 6;
     grid-column-end: 7;
     width: 150px;
-    height: 144px;
+    height: 150px;
   }
 }
