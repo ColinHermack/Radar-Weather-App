@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import rockyMountain from "./media/RockyMountain.jpg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, faIcicles, faCloudBolt } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, 
+  faIcicles, faCloudBolt, faClock, faCalendar, faFire, faWind, faDroplet, faTemperatureHalf, faWater, faTornado, faUser, 
+  faEye, faGauge, faHurricane} from '@fortawesome/free-solid-svg-icons';
 
 
 class App extends React.Component {
@@ -103,7 +105,7 @@ class App extends React.Component {
       longitude = this.state.longitude;
     }
     //Get weather data from the OpenMeteo API
-    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall`)
+    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall`)
       .then(response => response.json())
       .then(data => {
         console.log(data);
@@ -113,7 +115,8 @@ class App extends React.Component {
             weatherCode: data.current.weather_code,
             summary: getDescriptionFromWeatherCode(data.current.weather_code),
             high: Math.round(data.daily.temperature_2m_max[0]),
-            low: Math.round(data.daily.temperature_2m_min[0])
+            low: Math.round(data.daily.temperature_2m_min[0]),
+            isDay: data.current.is_day
           }
         })
         let hourlyWeather = []
@@ -165,6 +168,14 @@ class App extends React.Component {
       })
       .catch((error) => {console.log(error)})
 
+    //Get air quality data from OpenMeteo Air Quality API
+    fetch (`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=us_aqi&hourly=pm10,pm2_5,us_aqi`)
+      .then((response) => response.json()) 
+      .then((data) => {
+        this.setState({
+          airQuality: data.current.us_aqi
+        })
+      })
   }
 
   mainPage() {
@@ -177,8 +188,35 @@ class App extends React.Component {
     }
 
     const SmallRadar = () => {
-      return (<div id='small-radar-viewer' className='weather-details-box'></div>)
-    }
+      return (
+      <div id='small-radar-viewer' className='weather-details-box'>
+        <h1><FontAwesomeIcon icon = {faHurricane} /> RADAR</h1>
+        <div className='divider'></div>
+      </div>
+      )}
+
+      const AirQuality = () => {
+        const getAirQualityRating = (airQuality) => {
+          if (airQuality <= 50) {
+            return ("Good");
+          } else if (airQuality <= 100) {
+            return ("Moderate");
+          } else if (airQuality <= 150) {
+            return ("Unhealthy for Sensitive Groups");
+          } else if (airQuality <= 200) {
+            return("Unhealthy");
+          } else if (airQuality <= 300) {
+            return("Very Unhealthy");
+          } else {
+            return ("Hazardous");
+          }
+        }
+        return(<div id='air-quality-chart'>
+          <div id='air-quality-index'>{this.state.airQuality}</div>
+          <div id='air-quality-rating'>{getAirQualityRating(this.state.airQuality)}</div>
+          <div id='air-quality-scale'><div id='air-quality-marker' style={{left: (0.6 * this.state.airQuality + "px")}}></div></div>
+        </div>)
+      }
 
     const GetWeatherIcon = (code, isDay) => {
       if (code < 2) {  // Clear
@@ -222,6 +260,14 @@ class App extends React.Component {
       }
     }
 
+    const GetSunriseOrSunset = () => {
+      if (this.state.currentWeather.isDay === 1) {
+        return "SUNSET";
+      } else {
+        return "SUNRISE";
+      }
+    }
+
     return (
     <div id='container'>
       {BackgroundImage()}
@@ -239,35 +285,73 @@ class App extends React.Component {
             <div className='divider'></div>
             <p>{this.state.forecastDescription}</p>
           </div>
-          <div id='hourly-forecast' className='weather-details-box'>{
-            this.state.hourlyWeather.map((item) => {
-              let date = new Date();
-              // eslint-disable-next-line
-              if (date.getDate() == item.day && date.getHours() == item.time.slice(0, 2)) {
-                return(<div className='hourly-weather-container' key={item.day + " " + item.time} style={{backgroundColor: "rgba(120, 120, 120, 0.5)"}}>
-                <div className='hourly-time'>{item.time}</div>
-                <div className='hourly-icon'>{GetWeatherIcon(item.weatherCode, item.isDay)}</div>
-                <div className='hourly-temperature'>{item.temperature}°</div>
-              </div>)
-              }
-              return(<div className='hourly-weather-container' key={item.day + " " + item.time}>
-                <div className='hourly-time'>{item.time}</div>
-                <div className='hourly-icon'>{GetWeatherIcon(item.weatherCode, item.isDay)}</div>
-                <div className='hourly-temperature'>{item.temperature}°</div>
-              </div>)
-            })
-          }</div>
-          <div id='seven-day-forecast' className='weather-details-box'></div>
-          <div id='air-quality' className='weather-details-box'></div>
-          <div id='wind' className='weather-details-box'></div>
-          <div id='sunrise-sunset' className='weather-details-box'></div>
-          <div id='precipitation' className='weather-details-box'></div>
-          <div id='apparent-temperature' className='weather-details-box'></div>
-          <div id='humidity' className='weather-details-box'></div>
-          <div id='severe-weather' className='weather-details-box'></div>
-          <div id='forecast-discussion' className='weather-details-box'></div>
-          <div id='visibility' className='weather-details-box'></div>
-          <div id='pressure' className='weather-details-box'></div>
+          <div id='hourly-forecast' className='weather-details-box'>
+            <h1 className='weather-details-heading'><FontAwesomeIcon icon={faClock} /> HOURLY</h1>
+            <div className='divider'></div>
+            <div id='hourly-forecast-container'>
+              {this.state.hourlyWeather.map((item) => {
+                let date = new Date();
+                // eslint-disable-next-line
+                if (date.getDate() == item.day && date.getHours() == item.time.slice(0, 2)) {
+                  return(<div className='hourly-weather-container' key={item.day + " " + item.time} style={{backgroundColor: "rgba(120, 120, 120, 0.5)"}}>
+                  <div className='hourly-time'>{item.time}</div>
+                  <div className='hourly-icon'>{GetWeatherIcon(item.weatherCode, item.isDay)}</div>
+                  <div className='hourly-temperature'>{item.temperature}°</div>
+                </div>)
+                }
+                return(<div className='hourly-weather-container' key={item.day + " " + item.time}>
+                  <div className='hourly-time'>{item.time}</div>
+                  <div className='hourly-icon'>{GetWeatherIcon(item.weatherCode, item.isDay)}</div>
+                  <div className='hourly-temperature'>{item.temperature}°</div>
+                </div>)
+              })}
+            </div>
+          </div>
+          <div id='seven-day-forecast' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faCalendar}/> 7-DAY FORECAST</h1>
+            <div className='divider'></div>
+          </div>
+          <div id='air-quality' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faFire} /> AIR QUALITY</h1>
+            <div className='divider'></div>
+            <AirQuality/>
+          </div>
+          <div id='wind' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faWind} /> WIND</h1>
+            <div className='divider'></div>
+          </div>
+          <div id='sunrise-sunset' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faSun} /> {GetSunriseOrSunset()}</h1>
+            <div className='divider'></div>
+          </div>
+          <div id='precipitation' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faDroplet} /> PRECIPITATION</h1>
+            <div className='divider'></div>
+          </div>
+          <div id='apparent-temperature' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faTemperatureHalf} /> FEELS LIKE</h1>
+            <div className='divider'></div>
+          </div>
+          <div id='humidity' className='weather-details-box'>
+              <h1><FontAwesomeIcon icon={faWater} /> HUMIDITY</h1>
+              <div className='divider'></div>
+          </div>
+          <div id='severe-weather' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faTornado} /> SEVERE WEATHER</h1>
+            <div className='divider'></div>
+          </div>
+          <div id='forecast-discussion' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faUser} /> FORECAST DISCUSSION</h1>
+            <div className='divider'></div>
+          </div>
+          <div id='visibility' className='weather-details-box'>
+              <h1><FontAwesomeIcon icon={faEye} /> VISIBILITY</h1>
+              <div className='divider'></div>
+          </div>
+          <div id='pressure' className='weather-details-box'>
+              <h1><FontAwesomeIcon icon={faGauge} /> PRESSURE</h1>
+              <div className='divider'></div>
+          </div>
           <SmallRadar/>
         </div>
       </div>
