@@ -157,6 +157,7 @@ body {
   justify-content: left;
   align-items: center;
   scrollbar-width: none;
+  font-weight: 600;
 }
 
 #air-quality-index {
@@ -189,6 +190,68 @@ body {
   height: 8px;
   border-radius: 50%;
   background-color: var(--main-text-color);
+  position: relative;
+}
+
+#ten-day-forecast-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+}
+
+.daily-weather-container {
+  width: 300px;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  align-items: center;
+  border-top: 0.5px solid var(--main-text-color);
+  font-weight: 600;
+}
+
+.daily-day {
+  width: 50px;
+  text-align: left;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.daily-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 75px;
+  font-size: 1.3em;
+}
+
+.daily-low {
+  width: 45px;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+.daily-high {
+  width: 45px;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+.daily-temp-chart {
+  width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: rgb(40, 40, 40, 0.5);
+}
+
+.daily-temp-marker {
+  height: 4px;
+  border-radius: 2px;
+  background-image: linear-gradient(to right, rgb(21, 117, 196), rgb(9, 190, 246));
   position: relative;
 }
 
@@ -229,7 +292,7 @@ body {
     height: 150px;
   }
 
-  #seven-day-forecast {
+  #ten-day-forecast {
     grid-row-start: 3;
     grid-row-end: 6;
     grid-column-start: 1;
@@ -386,7 +449,7 @@ body {
     height: 150px;
   }
 
-  #seven-day-forecast {
+  #ten-day-forecast {
     grid-row-start: 3;
     grid-row-end: 6;
     grid-column-start: 1;
@@ -543,7 +606,7 @@ body {
     height: 150px;
   }
   
-  #seven-day-forecast {
+  #ten-day-forecast {
     grid-row-start: 2;
     grid-row-end: 5;
     grid-column-start: 1;
@@ -649,5 +712,31 @@ body {
     grid-column-end: 7;
     width: 150px;
     height: 150px;
+  }
+
+  #wind-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 300px;
+    margin-left: 10px; 
+  }
+
+  #wind-speed {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wind-info-container {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
   }
 }

@@ -7,6 +7,7 @@ import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faClou
   faIcicles, faCloudBolt, faClock, faCalendar, faFire, faWind, faDroplet, faTemperatureHalf, faWater, faTornado, faUser, 
   faEye, faGauge, faHurricane} from '@fortawesome/free-solid-svg-icons';
 
+const currDate = new Date();
 
 class App extends React.Component {
   constructor(props) {
@@ -23,7 +24,8 @@ class App extends React.Component {
         low: "--",
         weatherCode: undefined
       },
-      hourlyWeather: []
+      hourlyWeather: [],
+      dailyWeather: []
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
@@ -62,7 +64,7 @@ class App extends React.Component {
 
   populateData(latitude = undefined, longitude = undefined) {
     const getDescriptionFromWeatherCode = (code) => {
-      if (code < 2) {
+      if (code <= 2) {
         return ("Clear");
       } else if (code === 3) {
         return ("Cloudy");
@@ -105,10 +107,11 @@ class App extends React.Component {
       longitude = this.state.longitude;
     }
     //Get weather data from the OpenMeteo API
-    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall`)
+    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
       .then(response => response.json())
       .then(data => {
-        console.log(data);
+        console.log(data);  //FIXME DELETE
+        //Get current weather
         this.setState({
           currentWeather: {
             temperature: Math.round(data.current.temperature_2m),
@@ -116,15 +119,36 @@ class App extends React.Component {
             summary: getDescriptionFromWeatherCode(data.current.weather_code),
             high: Math.round(data.daily.temperature_2m_max[0]),
             low: Math.round(data.daily.temperature_2m_min[0]),
-            isDay: data.current.is_day
+            isDay: data.current.is_day,
+            windSpeed: Math.round(data.current.wind_speed_10m),
+            windGusts: Math.round(data.current.wind_gusts_10m),
+            windDirection: data.current.wind_direction_10m
           }
         })
+        //Get hourly weather for 48 hours
+
         let hourlyWeather = []
-        for (let i = 0; i < 48; i++) {
+        for (let i = currDate.getHours(); i < currDate.getHours() + 24; i++) {
+          let hours = Number(data.hourly.time[i].slice(11, 13));
+          let timeString = "";
+          if (hours < 12) {
+            if (hours === 0) {
+              timeString = "12 AM";
+            } else {
+              timeString = hours + " AM";
+            } 
+          } else {
+            if (hours === 12) {
+              timeString = "12 PM";
+            } else {
+              timeString = hours - 12 + " PM";
+            }
+          }
           hourlyWeather.push({
             month: data.hourly.time[i].slice(5, 7),
             day: data.hourly.time[i].slice(8, 10),
             time: data.hourly.time[i].slice(11),
+            timeString: timeString,
             temperature: Math.round(data.hourly.temperature_2m[i]),
             weatherCode: data.hourly.weather_code[i],
             precipitationProbability: data.hourly.precipitation_probability[i],
@@ -133,6 +157,48 @@ class App extends React.Component {
         }
         this.setState({
           hourlyWeather: hourlyWeather
+        })
+        //Get daily weather for a week
+        let dailyWeather = []
+        for (let i = 0; i < 10; i++) {
+          let date = new Date(data.daily.time[i]);
+          let day = ""
+          switch (date.getDay()) {
+            case 0:
+              day = "Mon";
+              break;
+            case 1:
+              day = "Tue";
+              break;
+            case 2:
+              day = "Wed";
+              break;
+            case 3:
+              day = "Thu";
+              break;
+            case 4:
+              day = "Fri";
+              break;
+            case 5:
+              day = "Sat";
+              break;
+            case 6: 
+              day = "Sun";
+              break;
+            default:
+              day = "";
+          }
+          dailyWeather.push({
+            day: day,
+            date: data.daily.time[i],
+            maxTemperature: Math.round(data.daily.temperature_2m_max[i]),
+            minTemperature: Math.round(data.daily.temperature_2m_min[i]),
+            weatherCode: data.daily.weather_code[i],
+            precipitationProbability: data.daily.precipitation_probability_max[i]
+          })
+        }
+        this.setState({
+          dailyWeather: dailyWeather
         })
       })
       .catch((error) => {console.log(error)})
@@ -214,12 +280,12 @@ class App extends React.Component {
         return(<div id='air-quality-chart'>
           <div id='air-quality-index'>{this.state.airQuality}</div>
           <div id='air-quality-rating'>{getAirQualityRating(this.state.airQuality)}</div>
-          <div id='air-quality-scale'><div id='air-quality-marker' style={{left: (0.6 * this.state.airQuality + "px")}}></div></div>
+          <div id='air-quality-scale'><div id='air-quality-marker' style={{left: (0.6 * this.state.airQuality - 4 + "px")}}></div></div>
         </div>)
       }
 
     const GetWeatherIcon = (code, isDay) => {
-      if (code < 2) {  // Clear
+      if (code <= 2) {  // Clear
         if (isDay) {
           return <FontAwesomeIcon icon={faSun} />
         } else {
@@ -268,6 +334,18 @@ class App extends React.Component {
       }
     }
 
+    const getDirection = ( angle ) => {
+      let directions = ["N","NNE","NE","ENE","E",
+        "ESE", "SE", "SSE","S",
+        "SSW","SW","WSW","W",
+        "WNW","NW","NNW" ];
+      let section = parseInt( angle/22.5 + 0.5 );
+      section = section % 16;
+      return directions[ section ];
+    }
+
+    console.log(this.state.currentWeather.windSpeed);
+
     return (
     <div id='container'>
       {BackgroundImage()}
@@ -290,26 +368,36 @@ class App extends React.Component {
             <div className='divider'></div>
             <div id='hourly-forecast-container'>
               {this.state.hourlyWeather.map((item) => {
-                let date = new Date();
-                // eslint-disable-next-line
-                if (date.getDate() == item.day && date.getHours() == item.time.slice(0, 2)) {
-                  return(<div className='hourly-weather-container' key={item.day + " " + item.time} style={{backgroundColor: "rgba(120, 120, 120, 0.5)"}}>
-                  <div className='hourly-time'>{item.time}</div>
-                  <div className='hourly-icon'>{GetWeatherIcon(item.weatherCode, item.isDay)}</div>
-                  <div className='hourly-temperature'>{item.temperature}°</div>
-                </div>)
-                }
                 return(<div className='hourly-weather-container' key={item.day + " " + item.time}>
-                  <div className='hourly-time'>{item.time}</div>
+                  <div className='hourly-time'>{item.timeString}</div>
                   <div className='hourly-icon'>{GetWeatherIcon(item.weatherCode, item.isDay)}</div>
                   <div className='hourly-temperature'>{item.temperature}°</div>
                 </div>)
               })}
             </div>
           </div>
-          <div id='seven-day-forecast' className='weather-details-box'>
-            <h1><FontAwesomeIcon icon={faCalendar}/> 7-DAY FORECAST</h1>
-            <div className='divider'></div>
+          <div id='ten-day-forecast' className='weather-details-box'>
+            <h1><FontAwesomeIcon icon={faCalendar}/> 10-DAY FORECAST</h1>
+            <div id='ten-day-forecast-container'>
+              {this.state.dailyWeather.map((item) => {
+                let width = item.maxTemperature - item.minTemperature;
+                let offset = item.minTemperature;
+                if (offset < 0) {
+                  offset = 0;
+                } else if (offset + width > 100) {
+                  offset = 100 - width;
+                }
+                return(
+                <div className='daily-weather-container' key={item.date}> 
+                  <div className='daily-day'>{item.day}</div>
+                  <div className='daily-icon'>{GetWeatherIcon(item.weatherCode, true)}</div>
+                  <div className='daily-low'>{item.minTemperature}°</div>
+                  <div className='daily-temp-chart'><div className='daily-temp-marker' style={{width:  (width + "px"), left: (offset + "px")}}></div></div>
+                  <div className='daily-high'>{item.maxTemperature}°</div>
+                </div>
+                )
+              })}
+            </div>
           </div>
           <div id='air-quality' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faFire} /> AIR QUALITY</h1>
@@ -319,6 +407,29 @@ class App extends React.Component {
           <div id='wind' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faWind} /> WIND</h1>
             <div className='divider'></div>
+            <div id='wind-container'>
+              <div id='wind-speed'>
+                <div id='wind-speed-sustained' className='wind-info-container'>
+                  <div className='wind-value'>{this.state.currentWeather.windSpeed}</div>
+                  <div className='wind-units'>
+                    <h2>MPH</h2>
+                    <h3>WIND</h3>
+                  </div>
+                </div>
+                <div className='divider'></div>
+                <div id='wind-speed-gusts' className='wind-info-container'>
+                  <div className='wind-value'>{this.state.currentWeather.windGusts}</div>
+                  <div className='wind-units'>
+                    <h2>MPH</h2>
+                    <h3>GUSTS</h3>
+                  </div>
+                </div>
+              </div>
+              <div id='wind-direction'>
+                  <div id='wind-direction-cardinal'>{getDirection(this.state.currentWeather.windDirection)}</div>
+                  <div id='wind-direction-degrees'>{this.state.currentWeather.windDirection}°</div>
+                </div>
+            </div>
           </div>
           <div id='sunrise-sunset' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faSun} /> {GetSunriseOrSunset()}</h1>
