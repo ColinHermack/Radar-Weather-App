@@ -260,7 +260,7 @@ class App extends React.Component {
       const Map = () => {
         const mapContainer = useRef(null);
         const map = useRef(null);
-        const [zoom] = useState(8);
+        const [zoom] = useState(3);
         let location = {longitude: this.state.longitude, latitude: this.state.latitude};
         maptilersdk.config.apiKey = process.env.REACT_APP_MAP_API_KEY;
         useEffect(() => {
@@ -269,13 +269,14 @@ class App extends React.Component {
         
           map.current = new maptilersdk.Map({
             container: mapContainer.current,
-            style: maptilersdk.MapStyle.BACKDROP,
+            style: maptilersdk.MapStyle.WINTER,
             center: [location.longitude, location.latitude],
-            zoom: zoom
+            zoom: zoom,
+            navigationControl: false
           });
 
           map.current.on('load', () => {
-            new maptilersdk.Marker({color: "#FF0000"})
+            new maptilersdk.Marker({color: "#29a7ba"})
             .setLngLat([location.longitude, location.latitude])
             .addTo(map.current);
 
