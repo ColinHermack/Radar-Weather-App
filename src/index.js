@@ -25,7 +25,8 @@ class App extends React.Component {
         summary: "--",
         high: "--",
         low: "--",
-        weatherCode: undefined
+        weatherCode: undefined,
+        precipitationAmount: 0
       },
       hourlyWeather: [],
       dailyWeather: [],
@@ -111,7 +112,7 @@ class App extends React.Component {
       longitude = this.state.longitude;
     }
     //Get weather data from the OpenMeteo API
-    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
+    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,rain_sum,snowfall_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
       .then(response => response.json())
       .then(data => {
         console.log(data);  //FIXME DELETE
@@ -129,7 +130,8 @@ class App extends React.Component {
             isDay: data.current.is_day,
             windSpeed: Math.round(data.current.wind_speed_10m),
             windGusts: Math.round(data.current.wind_gusts_10m),
-            windDirection: data.current.wind_direction_10m
+            windDirection: data.current.wind_direction_10m,
+            precipitationAmount: data.daily.precipitation_sum[0]
           }
         })
         //Get hourly weather for 48 hours
@@ -172,25 +174,25 @@ class App extends React.Component {
           let day = ""
           switch (date.getDay()) {
             case 0:
-              day = "Mon";
+              day = "Monday";
               break;
             case 1:
-              day = "Tue";
+              day = "Tuesday";
               break;
             case 2:
-              day = "Wed";
+              day = "Wednesday";
               break;
             case 3:
-              day = "Thu";
+              day = "Thursday";
               break;
             case 4:
-              day = "Fri";
+              day = "Friday";
               break;
             case 5:
-              day = "Sat";
+              day = "Saturday";
               break;
             case 6: 
-              day = "Sun";
+              day = "Sunday";
               break;
             default:
               day = "";
@@ -203,7 +205,10 @@ class App extends React.Component {
             weatherCode: data.daily.weather_code[i],
             precipitationProbability: data.daily.precipitation_probability_max[i],
             sunrise: data.daily.sunrise[i],
-            sunset: data.daily.sunset[i]
+            sunset: data.daily.sunset[i],
+            rainAmount: data.daily.rain_sum[i],
+            snowAmount: data.daily.snowfall_sum[i],
+            precipitationAmount: data.daily.precipitation_sum[i]
           })
         }
         this.setState({
@@ -451,6 +456,19 @@ class App extends React.Component {
       return directions[ section ];
     }
 
+    const getNextPrecipitation = () => {
+      for (let i = 1; i < this.state.dailyWeather.length; i++) {
+        if (this.state.dailyWeather[i].precipitationAmount > 0) {
+          if (this.state.dailyWeather[i].rainAmount > this.state.dailyWeather[i].snowAmount) {
+            return (`Next expected is ${this.state.dailyWeather[i].rainAmount.toFixed(2)}" of rain on ${this.state.dailyWeather[i].day}.`)
+          } else {
+            return (`Next expected is ${this.state.dailyWeather[i].rainAmount.toFixed(2)}" of snow on ${this.state.dailyWeather[i].day}.`)
+          }
+        }
+      }
+      return ("No precipitation is expected for the next ten days.")
+    }
+
     return (
     <div id='container'>
       {BackgroundImage()}
@@ -494,7 +512,7 @@ class App extends React.Component {
                 }
                 return(
                 <div className='daily-weather-container' key={item.date}> 
-                  <div className='daily-day'>{item.day}</div>
+                  <div className='daily-day'>{item.day.slice(0, 3)}</div>
                   <div className='daily-icon'>{GetWeatherIcon(item.weatherCode, true)}</div>
                   <div className='daily-low'>{item.minTemperature}°</div>
                   <div className='daily-temp-chart'><div className='daily-temp-marker' style={{width:  (width + "px"), left: (offset + "px")}}></div></div>
@@ -540,6 +558,10 @@ class App extends React.Component {
           <div id='precipitation' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faDroplet} /> PRECIPITATION</h1>
             <div className='divider'></div>
+            <div id='precipitation-container'>
+              <div id='precipitation-today'>{this.state.currentWeather.precipitationAmount}"<br></br><div id='precipitation-today-label'>Today</div></div>
+              <div id='next-precipitation'>{getNextPrecipitation()}</div>
+            </div>
           </div>
           <div id='apparent-temperature' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faTemperatureHalf} /> FEELS LIKE</h1>

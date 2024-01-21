@@ -296,6 +296,32 @@ body {
   background-color: var(--main-text-color);
 }
 
+#precipitation-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: left;
+}
+
+#precipitation-today {
+  font-size: 2em;
+  margin-left: 10px;
+  margin-top: 5px;
+  font-weight: 600;
+}
+
+#precipitation-today-label {
+  font-size: 0.7em;
+}
+
+#next-precipitation {
+  font-size: 0.9em;
+  margin-left: 10px;
+  margin-bottom: 10px;
+}
+
 /*Mobile styling */
 @media screen and (max-width: 991px) {
   #locations-list {
