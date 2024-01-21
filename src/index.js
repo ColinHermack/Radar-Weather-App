@@ -28,7 +28,8 @@ class App extends React.Component {
         weatherCode: undefined
       },
       hourlyWeather: [],
-      dailyWeather: []
+      dailyWeather: [],
+      isDay: true
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
@@ -114,6 +115,9 @@ class App extends React.Component {
       .then(response => response.json())
       .then(data => {
         console.log(data);  //FIXME DELETE
+        //Determine if it is daytime or not
+        this.setState({isDay: data.current.is_day});
+
         //Get current weather
         this.setState({
           currentWeather: {
@@ -197,7 +201,9 @@ class App extends React.Component {
             maxTemperature: Math.round(data.daily.temperature_2m_max[i]),
             minTemperature: Math.round(data.daily.temperature_2m_min[i]),
             weatherCode: data.daily.weather_code[i],
-            precipitationProbability: data.daily.precipitation_probability_max[i]
+            precipitationProbability: data.daily.precipitation_probability_max[i],
+            sunrise: data.daily.sunrise[i],
+            sunset: data.daily.sunset[i]
           })
         }
         this.setState({
@@ -369,12 +375,70 @@ class App extends React.Component {
       }
     }
 
-    const GetSunriseOrSunset = () => {
+    const SunriseSunset = () => {
+      let nextEvent = "";
       if (this.state.currentWeather.isDay === 1) {
-        return "SUNSET";
+        nextEvent = "SUNSET";
       } else {
-        return "SUNRISE";
+        nextEvent = "SUNRISE";
       }
+      
+      let time = "";
+      let periodLength = 0;
+      let periodProgress = 0;
+      if (this.state.dailyWeather.length > 0) {
+        if (this.state.isDay) {
+          time = this.state.dailyWeather[0].sunset.slice(11);
+        } else {
+          if (currDate.getHours() >= 12) {
+            time = this.state.dailyWeather[1].sunrise.slice(11);
+          } else {
+            time = this.state.dailyWeather[0].sunrise.slice(11);
+          }
+        }
+        if (time.slice(0, 2) === '00') {
+          time = "12" + time.slice(2) + " AM";
+        } else if (Number(time.slice(0, 2) > 12)) {
+          time = Number(time.slice(0, 2)) - 12 + time.slice(2) + " PM";
+        } else if (time.slice(0, 1) === '0') {
+          time = time.slice(1) + " AM";
+        }
+
+        if (this.state.isDay) {
+          periodLength = (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60)
+            - (Number(this.state.dailyWeather[0].sunrise.slice(14)) + Number(this.state.dailyWeather[0].sunrise.slice(11, 13)) * 60);
+        } else {
+          periodLength = (Number(this.state.dailyWeather[1].sunrise.slice(14)) + Number(this.state.dailyWeather[1].sunrise.slice(11, 13)) * 60)
+            + (1440 - (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60));
+        }
+
+        if (this.state.isDay) {
+          periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
+            - (Number(this.state.dailyWeather[0].sunrise.slice(14)) + Number(this.state.dailyWeather[0].sunrise.slice(11, 13)) * 60);
+        } else {
+          if (currDate.getHours() > 12) {
+            periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
+            - (Number(this.state.dailyWeather[0].sunrise.slice(14)) + Number(this.state.dailyWeather[0].sunrise.slice(11, 13)) * 60);
+          } else {
+
+          }
+          periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
+            + (1440 - (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60));
+        }
+      }
+
+      let barWidth = (periodProgress / periodLength) * 130;
+
+      return (
+        <div id='sunrise-sunset' className='weather-details-box'>
+          <h1><FontAwesomeIcon icon={faSun} /> {nextEvent}</h1>
+          <div className='divider'></div>
+          <div id='sunrise-sunset-container'>
+            <div id='sunrise-sunset-time'>{time}</div>
+            <div id='sunrise-sunset-chart'><div id='sunrise-sunset-progress' style={{width: barWidth + "px"}}></div></div>
+          </div>
+        </div>
+      )
     }
 
     const getDirection = ( angle ) => {
@@ -472,10 +536,7 @@ class App extends React.Component {
                 </div>
             </div>
           </div>
-          <div id='sunrise-sunset' className='weather-details-box'>
-            <h1><FontAwesomeIcon icon={faSun} /> {GetSunriseOrSunset()}</h1>
-            <div className='divider'></div>
-          </div>
+          <SunriseSunset />
           <div id='precipitation' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faDroplet} /> PRECIPITATION</h1>
             <div className='divider'></div>

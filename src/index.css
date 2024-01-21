@@ -268,6 +268,34 @@ body {
   border-radius: 5px;
 }
 
+#sunrise-sunset-container {
+  width: 100%;
+  height: 100%;
+}
+
+#sunrise-sunset-time {
+  font-size: 1.7em;
+  font-weight: 600;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+#sunrise-sunset-chart {
+  width: 130px;
+  height: 4px;
+  border-radius: 2px;
+  margin-left: 10px;
+  margin-top: 25px;
+  background-color: rgba(30, 30, 30, 0.8)
+}
+
+#sunrise-sunset-progress {
+  height: 4px;
+  width: 10px;
+  border-radius: 2px;
+  background-color: var(--main-text-color);
+}
+
 /*Mobile styling */
 @media screen and (max-width: 991px) {
   #locations-list {
