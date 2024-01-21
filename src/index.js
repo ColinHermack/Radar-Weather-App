@@ -344,8 +344,6 @@ class App extends React.Component {
       return directions[ section ];
     }
 
-    console.log(this.state.currentWeather.windSpeed);
-
     return (
     <div id='container'>
       {BackgroundImage()}
@@ -412,16 +410,16 @@ class App extends React.Component {
                 <div id='wind-speed-sustained' className='wind-info-container'>
                   <div className='wind-value'>{this.state.currentWeather.windSpeed}</div>
                   <div className='wind-units'>
-                    <h2>MPH</h2>
-                    <h3>WIND</h3>
+                    <div className='wind-unit'>MPH</div>
+                    <div className='wind-type'>WIND</div>
                   </div>
                 </div>
                 <div className='divider'></div>
                 <div id='wind-speed-gusts' className='wind-info-container'>
                   <div className='wind-value'>{this.state.currentWeather.windGusts}</div>
                   <div className='wind-units'>
-                    <h2>MPH</h2>
-                    <h3>GUSTS</h3>
+                    <div className='wind-unit'>MPH</div>
+                    <div className='wind-type'>GUSTS</div>
                   </div>
                 </div>
               </div>
