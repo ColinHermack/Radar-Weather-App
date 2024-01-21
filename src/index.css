@@ -255,6 +255,19 @@ body {
   position: relative;
 }
 
+.map-wrap {
+  width: 90%;
+  height: 90%;
+  margin: 5% 5%;
+}
+
+.map {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+}
+
 /*Mobile styling */
 @media screen and (max-width: 991px) {
   #locations-list {

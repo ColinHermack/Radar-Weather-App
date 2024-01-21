@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import rockyMountain from "./media/RockyMountain.jpg";
@@ -6,6 +6,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, 
   faIcicles, faCloudBolt, faClock, faCalendar, faFire, faWind, faDroplet, faTemperatureHalf, faWater, faTornado, faUser, 
   faEye, faGauge, faHurricane} from '@fortawesome/free-solid-svg-icons';
+import * as maptilersdk from '@maptiler/sdk';
+import * as maptilerweather from '@maptiler/weather';
+import "@maptiler/sdk/dist/maptiler-sdk.css";
 
 const currDate = new Date();
 
@@ -254,10 +257,49 @@ class App extends React.Component {
     }
 
     const SmallRadar = () => {
+      const Map = () => {
+        const mapContainer = useRef(null);
+        const map = useRef(null);
+        const [zoom] = useState(8);
+        let location = {longitude: this.state.longitude, latitude: this.state.latitude};
+        maptilersdk.config.apiKey = process.env.REACT_APP_MAP_API_KEY;
+        useEffect(() => {
+          setTimeout(2000);
+          if (map.current) return; // stops map from intializing more than once
+        
+          map.current = new maptilersdk.Map({
+            container: mapContainer.current,
+            style: maptilersdk.MapStyle.BACKDROP,
+            center: [location.longitude, location.latitude],
+            zoom: zoom
+          });
+
+          map.current.on('load', () => {
+            new maptilersdk.Marker({color: "#FF0000"})
+            .setLngLat([location.longitude, location.latitude])
+            .addTo(map.current);
+
+            const weatherLayer = new maptilerweather.RadarLayer({
+              opacity: 0.8,
+            });
+            map.current.addLayer(weatherLayer, 'Water');
+          })
+
+          
+        
+        }, [location.longitude, location.latitude, zoom]);
+
+        return (
+          <div className="map-wrap">
+            <div ref={mapContainer} className="map" />
+          </div>
+        );
+      }
       return (
       <div id='small-radar-viewer' className='weather-details-box'>
         <h1><FontAwesomeIcon icon = {faHurricane} /> RADAR</h1>
         <div className='divider'></div>
+        <Map />
       </div>
       )}
 
