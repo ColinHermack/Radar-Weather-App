@@ -26,7 +26,8 @@ class App extends React.Component {
         high: "--",
         low: "--",
         weatherCode: undefined,
-        precipitationAmount: 0
+        precipitationAmount: 0,
+        visiblity: 0
       },
       hourlyWeather: [],
       dailyWeather: [],
@@ -112,7 +113,7 @@ class App extends React.Component {
       longitude = this.state.longitude;
     }
     //Get weather data from the OpenMeteo API
-    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,rain_sum,snowfall_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
+    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,dew_point_2m,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,rain_sum,snowfall_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
       .then(response => response.json())
       .then(data => {
         console.log(data);  //FIXME DELETE
@@ -131,7 +132,12 @@ class App extends React.Component {
             windSpeed: Math.round(data.current.wind_speed_10m),
             windGusts: Math.round(data.current.wind_gusts_10m),
             windDirection: data.current.wind_direction_10m,
-            precipitationAmount: data.daily.precipitation_sum[0]
+            precipitationAmount: data.daily.precipitation_sum[0],
+            feelsLike: data.current.apparent_temperature,
+            humidity: data.current.relative_humidity_2m,
+            dewPoint: data.hourly.dew_point_2m[currDate.getHours()],
+            pressure: (0.029529983071445 * data.current.pressure_msl).toFixed(2),
+            visibility: (data.hourly.visibility[currDate.getHours()] / 5280).toFixed(1)
           }
         })
         //Get hourly weather for 48 hours
@@ -161,7 +167,8 @@ class App extends React.Component {
             temperature: Math.round(data.hourly.temperature_2m[i]),
             weatherCode: data.hourly.weather_code[i],
             precipitationProbability: data.hourly.precipitation_probability[i],
-            isDay: data.hourly.is_day[i]
+            isDay: data.hourly.is_day[i],
+            visibility: data.hourly.visibility[i]
           })
         }
         this.setState({
@@ -460,13 +467,37 @@ class App extends React.Component {
       for (let i = 1; i < this.state.dailyWeather.length; i++) {
         if (this.state.dailyWeather[i].precipitationAmount > 0) {
           if (this.state.dailyWeather[i].rainAmount > this.state.dailyWeather[i].snowAmount) {
-            return (`Next expected is ${this.state.dailyWeather[i].rainAmount.toFixed(2)}" of rain on ${this.state.dailyWeather[i].day}.`)
+            return (`Next expected is ${this.state.dailyWeather[i].rainAmount.toFixed(2)}" rain ${this.state.dailyWeather[i].day.slice(0, 3)}.`)
           } else {
-            return (`Next expected is ${this.state.dailyWeather[i].rainAmount.toFixed(2)}" of snow on ${this.state.dailyWeather[i].day}.`)
+            return (`Next expected is ${this.state.dailyWeather[i].rainAmount.toFixed(2)}" snow ${this.state.dailyWeather[i].day.slice(0, 3)}.`)
           }
         }
       }
-      return ("No precipitation is expected for the next ten days.")
+      return ("No precipitation expected for next ten days.")
+    }
+
+    const getApparentTemperatureMessage = () => {
+      if (this.state.currentWeather.feelsLike < this.state.currentWeather.temperature) {
+        return ("Wind is making it feel cooler.");
+      } else if (this.state.currentWeather.feelsLike > this.state.temperature) {
+        return ("Humidity is making it feel warmer.");
+      } else {
+        return ("There is no wind chill or heat index right now.");
+      }
+    }
+
+    const PressureChart = () => {
+      let markerPosition = (this.state.currentWeather.pressure - 29.92) * 31.25
+      if (markerPosition > 65) {
+        markerPosition = 65;
+      } else if (markerPosition < -65) {
+        markerPosition = -65;
+      }
+
+      return (<div id='pressure-chart-container'>
+        <div id='pressure-chart'><div id='pressure-marker' style={{left: markerPosition + "px"}}></div></div>
+        <div id='pressure-chart-label'><div>Low</div><div>High</div></div>
+      </div>)
     }
 
     return (
@@ -559,17 +590,25 @@ class App extends React.Component {
             <h1><FontAwesomeIcon icon={faDroplet} /> PRECIPITATION</h1>
             <div className='divider'></div>
             <div id='precipitation-container'>
-              <div id='precipitation-today'>{this.state.currentWeather.precipitationAmount}"<br></br><div id='precipitation-today-label'>Today</div></div>
+              <div id='precipitation-today'>{this.state.currentWeather.precipitationAmount.toFixed(2)}"<br></br><div id='precipitation-today-label'>Today</div></div>
               <div id='next-precipitation'>{getNextPrecipitation()}</div>
             </div>
           </div>
           <div id='apparent-temperature' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faTemperatureHalf} /> FEELS LIKE</h1>
             <div className='divider'></div>
+            <div id='apparent-temperature-container'>
+              <div id='apparent-temperature-value'>{Math.round(this.state.currentWeather.feelsLike)}°</div>
+              <div id='apparent-temperature-message'>{getApparentTemperatureMessage()}</div>
+              </div>
           </div>
           <div id='humidity' className='weather-details-box'>
               <h1><FontAwesomeIcon icon={faWater} /> HUMIDITY</h1>
               <div className='divider'></div>
+              <div id='humidity-container'>
+                <div id='humidity-value'>{this.state.currentWeather.humidity}%</div>
+                <div id='dew-point'>The dew point is {Math.round(this.state.currentWeather.dewPoint)}° right now.</div>
+              </div>
           </div>
           <div id='severe-weather' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faTornado} /> SEVERE WEATHER</h1>
@@ -582,10 +621,16 @@ class App extends React.Component {
           <div id='visibility' className='weather-details-box'>
               <h1><FontAwesomeIcon icon={faEye} /> VISIBILITY</h1>
               <div className='divider'></div>
+              <div id='visibility-container'>{this.state.currentWeather.visibility} mi</div>
           </div>
           <div id='pressure' className='weather-details-box'>
               <h1><FontAwesomeIcon icon={faGauge} /> PRESSURE</h1>
               <div className='divider'></div>
+              <div id='pressure-container'>
+                <div id='pressure-value'>{this.state.currentWeather.pressure}</div>
+                <div id='pressure-units'>inHg</div>
+                <PressureChart />
+              </div>
           </div>
           <SmallRadar/>
         </div>

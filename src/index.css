@@ -127,6 +127,7 @@ body {
   height: 0.5px;
   background-color: var(--main-text-color);
   margin-left: 10px;
+  z-index: 1;
 }
 
 .hourly-weather-container {
@@ -144,8 +145,13 @@ body {
   display: none;
 }
 
+#forecast-description {
+  scrollbar-width: none;
+}
+
 #forecast-description p {
   padding-left: 10px;
+  margin-top: 10px;
 }
 
 #hourly-forecast-container {
@@ -251,7 +257,7 @@ body {
 .daily-temp-marker {
   height: 4px;
   border-radius: 2px;
-  background-image: linear-gradient(to right, rgb(21, 117, 196), rgb(9, 190, 246));
+  background-color: var(--main-text-color);
   position: relative;
 }
 
@@ -286,7 +292,7 @@ body {
   border-radius: 2px;
   margin-left: 10px;
   margin-top: 25px;
-  background-color: rgba(30, 30, 30, 0.8)
+  background-color: rgba(30, 30, 30, 0.5);
 }
 
 #sunrise-sunset-progress {
@@ -318,8 +324,102 @@ body {
 
 #next-precipitation {
   font-size: 0.9em;
+  margin: 10px;
+}
+
+#apparent-temperature-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: left;
+}
+
+#apparent-temperature-value {
+  font-size: 2em;
   margin-left: 10px;
-  margin-bottom: 10px;
+  margin-top: 5px;
+}
+
+#apparent-temperature-message {
+  font-size: 0.9em;
+  margin: 10px;
+}
+
+#humidity-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: left;
+  font-weight: 600;
+}
+
+#humidity-value {
+  font-size: 2em;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+#dew-point {
+  margin: 10px;
+  font-size: 0.9em;
+}
+
+#pressure-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: top;
+  align-items: center;
+  font-weight: 600;
+}
+
+#pressure-value {
+  font-size: 2em;
+  margin-top: 5px;
+}
+
+#pressure-units {
+  font-size: 0.9em;
+  color: rgb(150, 150, 150);
+}
+
+#pressure-chart {
+  width: 130px;
+  height: 4px;
+  background-image: linear-gradient(to right, rgb(36, 99, 226), rgb(184, 61, 8));
+  margin-top: 15px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+#pressure-marker {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background-color: var(--main-text-color);
+  position: relative;
+}
+
+#pressure-chart-label {
+  width: 130px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+#visibility-container {
+  font-size: 2em;
+  margin-left: 10px;
+  margin-top: 5px;
 }
 
 /*Mobile styling */
@@ -498,7 +598,7 @@ body {
   }
 
   .wind-unit {
-    color: rgb(120, 120, 120);
+    color: rgb(150, 150, 150);
     font-weight: 600;
     font-size: 0.9em;
   }
@@ -547,6 +647,10 @@ body {
     grid-column-end: 5;
     width: 660px;
     height: 150px;
+  }
+
+  #forecast-description p {
+    width: 640px;
   }
 
   #hourly-forecast {
@@ -778,6 +882,12 @@ body {
     grid-column-end: 4;
     width: 490px;
     height: 150px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  #forecast-description p {
+    width: 470px;
   }
   
   #hourly-forecast {
