@@ -31,7 +31,8 @@ class App extends React.Component {
       },
       hourlyWeather: [],
       dailyWeather: [],
-      isDay: true
+      isDay: true,
+      warnings: []
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
@@ -251,6 +252,21 @@ class App extends React.Component {
           })
           .catch((error) => {
             this.setState({forecastDescription: "Not available"})
+          })
+        //Get watches, warnings, and advisories for the current area
+        fetch(`https://api.weather.gov/alerts/active/zone/${data.properties.forecastZone.slice(data.properties.forecastZone.indexOf("forecast/") + 9)}`)
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data); //FIXME DELETE
+            let warnings = [];
+            for (let i = 0; i < data.features.length; i++) {
+              warnings.push({
+                title: data.features[i].properties.event,
+                description: data.features[i].properties.description,
+                instructions: data.features[i].properties.instructions,
+                ends: data.features[i].properties.ends.slice(0, 19)
+              })
+            }
           })
       })
       .catch((error) => {console.log(error)})
