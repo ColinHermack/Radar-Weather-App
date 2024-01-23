@@ -5,7 +5,7 @@ import rockyMountain from "./media/RockyMountain.jpg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, 
   faIcicles, faCloudBolt, faClock, faCalendar, faFire, faWind, faDroplet, faTemperatureHalf, faWater, faTornado, faUser, 
-  faEye, faGauge, faHurricane} from '@fortawesome/free-solid-svg-icons';
+  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus} from '@fortawesome/free-solid-svg-icons';
 import * as maptilersdk from '@maptiler/sdk';
 import * as maptilerweather from '@maptiler/weather';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
@@ -32,7 +32,8 @@ class App extends React.Component {
       hourlyWeather: [],
       dailyWeather: [],
       isDay: true,
-      warnings: []
+      warnings: [],
+      cwa: undefined
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
@@ -231,14 +232,15 @@ class App extends React.Component {
       .then(data => {
         this.setState({
           city: data.properties.relativeLocation.properties.city,
-          state: data.properties.relativeLocation.properties.state
+          state: data.properties.relativeLocation.properties.state,
+          cwa: data.properties.cwa
         })
         //Get the forecast discussion and parse the HTML to extract the actual text of the forecast discussion
         fetch(`https://forecast.weather.gov/product.php?site=${data.properties.cwa}&issuedby=${data.properties.cwa}&product=AFD&format=ci&version=1&glossary=1`)
           .then((response) => response.text())
           .then((data) => {
             this.setState({
-              forecastDiscussion: data
+              forecastDiscussion: data,
             })
           })
           .catch((error) => {console.log(error)})
@@ -267,6 +269,7 @@ class App extends React.Component {
                 ends: data.features[i].properties.ends.slice(0, 19)
               })
             }
+            this.setState({warnings: warnings});
           })
       })
       .catch((error) => {console.log(error)})
@@ -432,7 +435,7 @@ class App extends React.Component {
           time = time.slice(1) + " AM";
         }
 
-        if (this.state.isDay) {
+        if (this.state.isDay === 1) {
           periodLength = (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60)
             - (Number(this.state.dailyWeather[0].sunrise.slice(14)) + Number(this.state.dailyWeather[0].sunrise.slice(11, 13)) * 60);
         } else {
@@ -446,12 +449,12 @@ class App extends React.Component {
         } else {
           if (currDate.getHours() > 12) {
             periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
-            - (Number(this.state.dailyWeather[0].sunrise.slice(14)) + Number(this.state.dailyWeather[0].sunrise.slice(11, 13)) * 60);
+            - (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60);
           } else {
-
-          }
-          periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
+            periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
             + (1440 - (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60));
+          }
+          
         }
       }
 
@@ -516,11 +519,51 @@ class App extends React.Component {
       </div>)
     }
 
+    const SevereWeather = () => {
+      if (this.state.warnings.length === 0) {
+        return (
+          <div id='severe-weather-container'>All quiet in {this.state.city}</div>
+        )
+      } else if (this.state.warnings.length <= 2) {
+        return <div id='severe-weather-container'>
+          {this.state.warnings.map((item) => {
+            return (
+              <div className='severe-weather-event'>
+                <FontAwesomeIcon icon={faTriangleExclamation} className='warning-icon' />
+                <div className='severe-weather-title'>{item.title}</div>
+              </div>
+            )
+          })}
+        </div>
+      } else {
+        return <div id='severe-weather-container'>
+          {this.state.warnings.subarray(0, 2).map((item) => {
+            return (
+              <div className='severe-weather-event'>
+                <FontAwesomeIcon icon={faTriangleExclamation} className='warning-icon' />
+                <div className='severe-weather-title'>{item.title}</div>
+              </div>
+            )
+          })}
+          <div id='severe-weather-additional'>Plus {this.state.warnings.length - 3} additional warnings, watches, or advisories.</div>
+        </div>
+      }
+    }
+
+    const getCities = (term) => {
+      
+    }
+
     return (
     <div id='container'>
-      {BackgroundImage()}
-      {LocationsList()}
+      <BackgroundImage />
+      <LocationsList />
       <div id='current-location-container'>
+        <nav>
+            <div id='add-button'><FontAwesomeIcon icon={faPlus} /></div>
+            <input id='location-search-input' placeholder='Search'/>
+        </nav>
+        <div id='location-search-results'></div>
         <div id='weather-header'>
           <div id='city'>{this.state.city}</div>
           <div id='current-temperature'>{this.state.currentWeather.temperature}°</div>
@@ -629,10 +672,12 @@ class App extends React.Component {
           <div id='severe-weather' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faTornado} /> SEVERE WEATHER</h1>
             <div className='divider'></div>
+            <SevereWeather />
           </div>
           <div id='forecast-discussion' className='weather-details-box'>
             <h1><FontAwesomeIcon icon={faUser} /> FORECAST DISCUSSION</h1>
             <div className='divider'></div>
+            <div id='forecast-discussion-container'>Forecast discussion for your area issued by {this.state.cwa}.</div>
           </div>
           <div id='visibility' className='weather-details-box'>
               <h1><FontAwesomeIcon icon={faEye} /> VISIBILITY</h1>
