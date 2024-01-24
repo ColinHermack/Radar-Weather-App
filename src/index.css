@@ -113,6 +113,26 @@ nav {
   color: rgb(120, 120, 120);
 }
 
+#location-search-results {
+  position: absolute;
+  right: 40px;
+  top: 50px;
+  background-color: #313638;
+  color: var(--main-text-color);
+  font-size: 0.8em;
+  font-weight: 600;
+  border-radius: 5px;
+}
+
+#location-search-results div {
+  padding: 5px;
+}
+
+#location-search-results div:hover {
+  background-color: rgb(70, 70, 70);
+  border-radius: 5px;
+}
+
 /* Main page styling for all screen sizes */
 
 #weather-header {

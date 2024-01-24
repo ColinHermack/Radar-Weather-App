@@ -33,7 +33,8 @@ class App extends React.Component {
       dailyWeather: [],
       isDay: true,
       warnings: [],
-      cwa: undefined
+      cwa: undefined,
+      searchResults: []
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
@@ -102,7 +103,7 @@ class App extends React.Component {
         return ("Fog");
       } else if (code === 29) {
         return ("Thunderstorm")
-      } else if (code >= 36 || code <= 39) {
+      } else if (code >= 36 && code <= 39) {
         return ("Blizzard");
       } else if (code >= 40 && code <= 49){
         return ("Fog");
@@ -259,7 +260,6 @@ class App extends React.Component {
         fetch(`https://api.weather.gov/alerts/active/zone/${data.properties.forecastZone.slice(data.properties.forecastZone.indexOf("forecast/") + 9)}`)
           .then((response) => response.json())
           .then((data) => {
-            console.log(data); //FIXME DELETE
             let warnings = [];
             for (let i = 0; i < data.features.length; i++) {
               warnings.push({
@@ -528,7 +528,7 @@ class App extends React.Component {
         return <div id='severe-weather-container'>
           {this.state.warnings.map((item) => {
             return (
-              <div className='severe-weather-event'>
+              <div className='severe-weather-event' key={item.title}>
                 <FontAwesomeIcon icon={faTriangleExclamation} className='warning-icon' />
                 <div className='severe-weather-title'>{item.title}</div>
               </div>
@@ -539,7 +539,7 @@ class App extends React.Component {
         return <div id='severe-weather-container'>
           {this.state.warnings.subarray(0, 2).map((item) => {
             return (
-              <div className='severe-weather-event'>
+              <div className='severe-weather-event' key={item.title}>
                 <FontAwesomeIcon icon={faTriangleExclamation} className='warning-icon' />
                 <div className='severe-weather-title'>{item.title}</div>
               </div>
@@ -550,9 +550,49 @@ class App extends React.Component {
       }
     }
 
-    const getCities = (term) => {
-      
+    const getCities = () => {
+      let searchTerm = document.getElementById('location-search-input').value;
+      if (searchTerm.length >= 3) {
+        fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${searchTerm}&count=5&language=en&format=json`)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('location-search-results').innerHTML = "";
+          for (let i = 0; i < 5; i++) {
+            if (i === data.results.length) {
+              break;
+            }
+            let city = data.results[i].name;
+            let state = data.results[i].admin1;
+            let country = data.results[i].country;
+
+            if (city === undefined) {
+              city = "";
+            }
+            if (state === undefined) {
+              state = "";
+            } else {
+              state = ", " + state;
+            }
+            if (country === undefined) {
+              country = "";
+            } else {
+              country = ", " + country;
+            }
+            let node = document.createElement("div");
+            node.innerHTML = (city + state + country);
+            node.setAttribute("latitude", data.results[i].latitude);
+            node.setAttribute("longitude", data.results[i].longitude);
+            node.onclick = (event) => {
+              this.populateData(event.target.getAttribute("latitude"), event.target.getAttribute("longitude"));
+            }
+            document.getElementById('location-search-results').appendChild(node);
+          }
+        })
+      } else {
+        document.getElementById("location-search-results").innerHTML = "";
+      }
     }
+    
 
     return (
     <div id='container'>
@@ -560,8 +600,8 @@ class App extends React.Component {
       <LocationsList />
       <div id='current-location-container'>
         <nav>
-            <div id='add-button'><FontAwesomeIcon icon={faPlus} /></div>
-            <input id='location-search-input' placeholder='Search'/>
+          <div id='add-button'><FontAwesomeIcon icon={faPlus} /></div>
+          <input id='location-search-input' placeholder='🔎 Search' onChange={getCities}/>
         </nav>
         <div id='location-search-results'></div>
         <div id='weather-header'>
