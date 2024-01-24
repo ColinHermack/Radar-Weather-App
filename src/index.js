@@ -262,12 +262,21 @@ class App extends React.Component {
           .then((data) => {
             let warnings = [];
             for (let i = 0; i < data.features.length; i++) {
-              warnings.push({
-                title: data.features[i].properties.event,
-                description: data.features[i].properties.description,
-                instructions: data.features[i].properties.instructions,
-                ends: data.features[i].properties.ends.slice(0, 19)
-              })
+              if (data.features[i].properties.ends !== null) {
+                warnings.push({
+                  title: data.features[i].properties.event,
+                  description: data.features[i].properties.description,
+                  instructions: data.features[i].properties.instructions,
+                  ends: data.features[i].properties.ends.slice(0, 19)
+                })
+              } else {
+                warnings.push({
+                  title: data.features[i].properties.event,
+                  description: data.features[i].properties.description,
+                  instructions: data.features[i].properties.instructions
+                })
+              }
+              
             }
             this.setState({warnings: warnings});
           })
@@ -556,6 +565,9 @@ class App extends React.Component {
         fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${searchTerm}&count=5&language=en&format=json`)
         .then(response => response.json())
         .then(data => {
+          if (data.results === undefined) {
+            return;
+          }
           document.getElementById('location-search-results').innerHTML = "";
           for (let i = 0; i < 5; i++) {
             if (i === data.results.length) {
@@ -584,10 +596,13 @@ class App extends React.Component {
             node.setAttribute("longitude", data.results[i].longitude);
             node.onclick = (event) => {
               this.populateData(event.target.getAttribute("latitude"), event.target.getAttribute("longitude"));
+              document.getElementById('location-search-input').value = "";
+              document.getElementById('location-search-results').innerHTML = "";
             }
             document.getElementById('location-search-results').appendChild(node);
           }
         })
+        .catch((error) => {console.log(error)});
       } else {
         document.getElementById("location-search-results").innerHTML = "";
       }
