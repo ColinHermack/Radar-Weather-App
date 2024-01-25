@@ -5,7 +5,7 @@ import rockyMountain from "./media/RockyMountain.jpg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, 
   faIcicles, faCloudBolt, faClock, faCalendar, faFire, faWind, faDroplet, faTemperatureHalf, faWater, faTornado, faUser, 
-  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus} from '@fortawesome/free-solid-svg-icons';
+  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus, faLocationArrow } from '@fortawesome/free-solid-svg-icons';
 import * as maptilersdk from '@maptiler/sdk';
 import * as maptilerweather from '@maptiler/weather';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
@@ -34,7 +34,8 @@ class App extends React.Component {
       isDay: true,
       warnings: [],
       cwa: undefined,
-      searchResults: []
+      searchResults: [],
+      savedLocations: []
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
@@ -140,7 +141,8 @@ class App extends React.Component {
             humidity: data.current.relative_humidity_2m,
             dewPoint: data.hourly.dew_point_2m[currDate.getHours()],
             pressure: (0.029529983071445 * data.current.pressure_msl).toFixed(2),
-            visibility: (data.hourly.visibility[currDate.getHours()] / 5280).toFixed(1)
+            visibility: (data.hourly.visibility[currDate.getHours()] / 5280).toFixed(1),
+            description: getDescriptionFromWeatherCode(data.current.weather_code)
           }
         })
         //Get hourly weather for 48 hours
@@ -291,11 +293,34 @@ class App extends React.Component {
           airQuality: data.current.us_aqi
         })
       })
+
   }
 
   mainPage() {
     const LocationsList = () => {
-      return (<div id='locations-list'></div>);
+      return (<div id='locations-list'>
+        <div id='current-location-widget' className='location-widget' latitude={this.state.latitude} longitude={this.state.longitude}>
+          <div className='location-left'>
+            <div className='location-name'><FontAwesomeIcon icon={faLocationArrow} /> {this.state.city}</div>
+            <div className='location-weather-description'>{this.state.currentWeather.description}</div>
+          </div>
+          <div className='location-temperature'>{this.state.currentWeather.temperature}°</div>
+        </div>
+        <div className='divider'></div>
+        {this.state.savedLocations.map((item) => {
+          return (
+            <div className='location-widget-container'>
+              <div className='location-widget'>
+                <div className='location-left'>
+                  <div className='location-name'><FontAwesomeIcon icon={faLocationArrow} />{item.city}</div>
+                  <div className='location-weather-description'>{item.description}</div>
+                </div>
+                <div className='location-temperature'>{item.temperature}°</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>);
     }
 
     const BackgroundImage = () => {
@@ -615,7 +640,39 @@ class App extends React.Component {
       <LocationsList />
       <div id='current-location-container'>
         <nav>
-          <div id='add-button'><FontAwesomeIcon icon={faPlus} /></div>
+          <div id='add-button'><FontAwesomeIcon icon={faPlus} onClick = {() => {
+            let node = document.createElement("div");
+            node.classList.add("location-widget");
+            node.setAttribute("latitude", this.state.latitude);
+            node.setAttribute("longitude", this.state.longitude);
+
+            let leftNode = document.createElement("div");
+            leftNode.classList.add("location-left");
+            let locationNode = document.createElement("div");
+            locationNode.classList.add("location-name");
+            locationNode.innerHTML = this.state.city;
+            leftNode.appendChild(locationNode);
+            let conditionsNode = document.createElement("div");
+            conditionsNode.classList.add("location-weather-description");
+            conditionsNode.innerHTML = this.state.currentWeather.description;
+            leftNode.appendChild(conditionsNode);
+
+            let rightNode = document.createElement("div");
+            rightNode.classList.add("location-right");
+            let temperatureNode = document.createElement("div");
+            temperatureNode.classList.add("location-temperature");
+            temperatureNode.innerHTML = this.state.currentWeather.temperature + "°";
+            rightNode.appendChild(temperatureNode);
+
+            node.appendChild(leftNode);
+            node.appendChild(rightNode);
+
+            let divider = document.createElement("div");
+            divider.classList.add("divider");
+
+            document.getElementById("locations-list").appendChild(node);
+            document.getElementById("locations-list").appendChild(divider);
+          }} /></div>
           <input id='location-search-input' placeholder='🔎 Search' onChange={getCities}/>
         </nav>
         <div id='location-search-results'></div>

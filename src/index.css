@@ -510,6 +510,43 @@ nav {
   margin-right: 5px;
 }
 
+.location-widget {
+  width: calc(100% - 20px);
+  height: 45px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.location-widget:hover {
+  background-color: rgb(100, 100, 100);
+}
+
+.location-left {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.location-name {
+  font-weight: 600;
+  color: var(--main-text-color);
+  font-size: 0.9em;
+}
+
+.location-weather-description {
+  font-weight: 600;
+  font-size: 0.8em;
+  color: rgb(160, 160, 160);
+}
+
+.location-temperature {
+  font-size: 2.2em;
+  color: var(--main-text-color);
+}
+
 /*Mobile styling */
 @media screen and (max-width: 991px) {
   #locations-list {
