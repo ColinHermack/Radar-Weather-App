@@ -73,6 +73,24 @@ body {
   background-color: black;
 }
 
+#bottom-controls {
+  margin-bottom: 50px;
+}
+
+#clear-saved {
+  background-color: rgba(255, 255, 255, 0);
+  color: var(--main-text-color);
+  font-weight: 600;
+  border: 2px solid var(--main-text-color);
+  border-radius: 5px;
+  padding: 5px;
+}
+
+#clear-saved:hover {
+  background-color: var(--main-text-color);
+  color: rgb(30, 30, 30);
+}
+
 /* Navbar styling */
 nav {
   width: 100%;
@@ -131,6 +149,60 @@ nav {
 #location-search-results div:hover {
   background-color: rgb(70, 70, 70);
   border-radius: 5px;
+}
+
+/* Hourly and daily detail viewer styling */
+#detail-view-container {
+  width: 90vw;
+  margin-left: 5vw;
+  margin-top: 5vh;
+  min-height: 90vh;
+  background-color: rgb(30, 30, 30);
+  border-radius: 10px;
+}
+
+#top-bar {
+  width: calc(100% - 40px);
+  height: 50px;
+  border-bottom: 0.5px solid rgb(100, 100, 100);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 20px;
+}
+
+#close-button {
+  background-color: rgb(170, 170, 170);
+  color: rgb(100, 100, 100);
+  border: none;
+  font-size: 1.5em;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+h1 {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--main-text-color);
+}
+
+#hourly-daily-selector {
+  color: var(--main-text-color);
+  font-weight: 600;
+  font-size: 0.9em;
+  width: 80px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgb(90, 90, 90);
+  padding: 10px;
+  border-radius: 25px;
 }
 
 /* Main page styling for all screen sizes */
@@ -517,10 +589,14 @@ nav {
   flex-direction: row;
   justify-content: space-between;
   padding: 10px;
+  animation-name: location-item-normal;
+  animation-duration: 0.25s;
 }
 
 .location-widget:hover {
   background-color: rgba(100, 100, 100, 0.5);
+  animation-name: location-item-hover;
+  animation-duration: 0.25s;
 }
 
 .location-left {
@@ -1205,5 +1281,20 @@ nav {
 
   #wind-direction-degrees {
     font-weight: 600;
+  }
+}
+
+/* Animations */
+@keyframes location-item-hover {
+  to {
+    background-color: rgba(100, 100, 100, 0.5);
+  }
+}
+
+@keyframes location-item-normal {
+  from {
+    background-color: rgba(100, 100, 100, 0.5);
+  } to {
+    background-color: rgba(255, 255, 255, 0);
   }
 }

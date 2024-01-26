@@ -5,7 +5,7 @@ import rockyMountain from "./media/RockyMountain.jpg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, 
   faIcicles, faCloudBolt, faClock, faCalendar, faFire, faWind, faDroplet, faTemperatureHalf, faWater, faTornado, faUser, 
-  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus, faLocationArrow } from '@fortawesome/free-solid-svg-icons';
+  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus, faLocationArrow, faCircleXmark, faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import * as maptilersdk from '@maptiler/sdk';
 import * as maptilerweather from '@maptiler/weather';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
@@ -35,17 +35,22 @@ class App extends React.Component {
       warnings: [],
       cwa: undefined,
       searchResults: [],
-      savedLocations: []
+      savedLocations: [],
+      status: "normal"
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
     this.getDescriptionFromWeatherCode = this.getDescriptionFromWeatherCode.bind(this);
+    this.DetailView = this.DetailView.bind(this);
+    this.BackgroundImage = this.BackgroundImage.bind(this);
   }
 
   componentDidMount() {
     //Try to get the user's coordinate location
     if (navigator.geolocation){
       navigator.geolocation.getCurrentPosition((position) => {
+        console.log(position.coords.latitude);
+        console.log(position.coords.longitude);
         this.populateData(position.coords.latitude, position.coords.longitude);
       });
     }
@@ -118,11 +123,12 @@ class App extends React.Component {
       latitude = this.state.latitude;
       longitude = this.state.longitude;
     }
+
     //Get weather data from the OpenMeteo API
     fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,dew_point_2m,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,rain_sum,snowfall_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
       .then(response => response.json())
       .then(data => {
-        console.log(data);  //FIXME DELETE
+        console.log(data);
         //Determine if it is daytime or not
         this.setState({isDay: data.current.is_day});
 
@@ -264,6 +270,7 @@ class App extends React.Component {
         fetch(`https://api.weather.gov/alerts/active/zone/${data.properties.forecastZone.slice(data.properties.forecastZone.indexOf("forecast/") + 9)}`)
           .then((response) => response.json())
           .then((data) => {
+            console.log(data);
             let warnings = [];
             for (let i = 0; i < data.features.length; i++) {
               if (data.features[i].properties.ends !== null) {
@@ -297,8 +304,16 @@ class App extends React.Component {
     })
   }
 
+  BackgroundImage() {
+    return (<div id='background-image-container'><img id='background-image' src={rockyMountain} alt=''/></div>)
+  }
+
   mainPage() {
     const LocationsList = () => {
+      const setLocation = (event) => {
+        this.populateData(event.currentTarget.getAttribute("latitude"), event.currentTarget.getAttribute("longitude"));
+      }
+
       useEffect(() => {
         //Get cookies
         let locations = document.cookie;
@@ -346,6 +361,8 @@ class App extends React.Component {
   
           let divider = document.createElement("div");
           divider.classList.add("divider");
+
+          node.onclick = setLocation;
   
           document.getElementById("locations-list").appendChild(node);
           document.getElementById("locations-list").appendChild(divider);
@@ -367,7 +384,7 @@ class App extends React.Component {
       }, [])
 
       return (<div id='locations-list'>
-        <div id='current-location-widget' className='location-widget' latitude={this.state.latitude} longitude={this.state.longitude}>
+        <div id='current-location-widget' className='location-widget' latitude={this.state.latitude} longitude={this.state.longitude} onClick={setLocation}>
           <div className='location-left'>
             <div className='location-name'><FontAwesomeIcon icon={faLocationArrow} /> {this.state.city}</div>
             <div className='location-weather-description'>{this.state.currentWeather.description}</div>
@@ -389,10 +406,6 @@ class App extends React.Component {
           )
         })}
       </div>);
-    }
-
-    const BackgroundImage = () => {
-      return (<div id='background-image-container'><img id='background-image' src={rockyMountain} alt=''/></div>)
     }
 
     const SmallRadar = () => {
@@ -501,7 +514,7 @@ class App extends React.Component {
         return <FontAwesomeIcon icon={faSmog} />
       } else if (code === 29) {
         return <FontAwesomeIcon icon={faCloudBolt} />
-      } else if (code >= 36 || code <= 39) {  //Bizzard
+      } else if (code >= 36 && code <= 39) {  //Bizzard
         return <FontAwesomeIcon icon={faSnowflake} />
       } else if (code >= 40 && code <= 49){
         return <FontAwesomeIcon icon={faSmog} />
@@ -704,7 +717,7 @@ class App extends React.Component {
 
     return (
     <div id='container'>
-      <BackgroundImage />
+      {this.BackgroundImage()}
       <LocationsList />
       <div id='current-location-container'>
         <nav>
@@ -766,7 +779,7 @@ class App extends React.Component {
             <div className='divider'></div>
             <p>{this.state.forecastDescription}</p>
           </div>
-          <div id='hourly-forecast' className='weather-details-box'>
+          <div id='hourly-forecast' className='weather-details-box' onClick={() => {this.setState({status: "detail-hourly"})}}>
             <h1 className='weather-details-heading'><FontAwesomeIcon icon={faClock} /> HOURLY</h1>
             <div className='divider'></div>
             <div id='hourly-forecast-container'>
@@ -779,7 +792,7 @@ class App extends React.Component {
               })}
             </div>
           </div>
-          <div id='ten-day-forecast' className='weather-details-box'>
+          <div id='ten-day-forecast' className='weather-details-box' onClick={() => {this.setState({status: "detail-daily"})}}>
             <h1><FontAwesomeIcon icon={faCalendar}/> 10-DAY FORECAST</h1>
             <div id='ten-day-forecast-container'>
               {this.state.dailyWeather.map((item) => {
@@ -886,19 +899,45 @@ class App extends React.Component {
           <SmallRadar/>
         </div>
         <div id='bottom-controls'>
-        <button id='clear-saved'>Clear Saved</button>
+          <button id='clear-saved' onClick = {() => {
+            let currentWeather = document.getElementById("current-location-widget");
+            document.getElementById("locations-list").innerHTML = "";
+            document.getElementById("locations-list").appendChild(currentWeather);
+            let divider = document.createElement("div");
+            divider.classList.add("divider");
+            document.getElementById("locations-list").appendChild(divider);
+
+            document.cookie = "locations=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          }}>Clear Saved</button>
         </div>
-        
       </div>
     </div>)
+  }
 
+  DetailView() {
+    return (
+      <div id='container'>
+        {this.BackgroundImage()}
+        <div id='detail-view-container'>
+          <div id='top-bar'>
+            <button id='close-button'><FontAwesomeIcon icon={faCircleXmark} /></button>
+            <h1>Hourly</h1>
+            <div id='hourly-daily-selector'>Hourly<FontAwesomeIcon icon={faAngleDown} /></div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   render() {
-    if (this.state.latitude === undefined || this.state.longitude === undefined) {
-      return (this.getLocationPage());
-    } else {
-      return (this.mainPage());
+    if (this.state.status === 'normal') {
+      if (this.state.latitude === undefined || this.state.longitude === undefined) {
+        return (this.getLocationPage());
+      } else {
+        return (this.mainPage());
+      }
+    } else if (this.state.status === 'detail-hourly' || this.state.status === 'detail-daily') {
+      return (this.DetailView());
     }
   }
 }
