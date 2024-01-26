@@ -43,6 +43,7 @@ class App extends React.Component {
     this.getDescriptionFromWeatherCode = this.getDescriptionFromWeatherCode.bind(this);
     this.DetailView = this.DetailView.bind(this);
     this.BackgroundImage = this.BackgroundImage.bind(this);
+    this.getWindDirection = this.getWindDirection.bind(this);
   }
 
   componentDidMount() {
@@ -125,7 +126,7 @@ class App extends React.Component {
     }
 
     //Get weather data from the OpenMeteo API
-    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,dew_point_2m,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,rain_sum,snowfall_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
+    fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,dew_point_2m,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=apparent_temperature_max,uv_index_max,weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,rain_sum,snowfall_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
       .then(response => response.json())
       .then(data => {
         console.log(data);
@@ -181,7 +182,14 @@ class App extends React.Component {
             weatherCode: data.hourly.weather_code[i],
             precipitationProbability: data.hourly.precipitation_probability[i],
             isDay: data.hourly.is_day[i],
-            visibility: data.hourly.visibility[i]
+            visibility: data.hourly.visibility[i],
+            uvIndex: data.hourly.uv_index[i],
+            feelsLike: data.hourly.apparent_temperature[i],
+            pressure: data.hourly.surface_pressure[i],
+            humidity: data.hourly.relative_humidity_2m[i],
+            windSpeed: data.hourly.wind_speed_10m[i],
+            windGusts: data.hourly.wind_gusts_10m[i],
+            windDirection: data.hourly.wind_direction_10m[i]
           })
         }
         this.setState({
@@ -228,7 +236,10 @@ class App extends React.Component {
             sunset: data.daily.sunset[i],
             rainAmount: data.daily.rain_sum[i],
             snowAmount: data.daily.snowfall_sum[i],
-            precipitationAmount: data.daily.precipitation_sum[i]
+            precipitationAmount: data.daily.precipitation_sum[i],
+            uvIndex: data.daily.uv_index_max[i],
+            feelsLike: data.daily.apparent_temperature_max[i],
+            
           })
         }
         this.setState({
@@ -302,6 +313,16 @@ class App extends React.Component {
           airQuality: data.current.us_aqi
         })
     })
+  }
+
+  getWindDirection(angle) {
+    let directions = ["N","NNE","NE","ENE","E",
+    "ESE", "SE", "SSE","S",
+    "SSW","SW","WSW","W",
+    "WNW","NW","NNW" ];
+    let section = parseInt( angle/22.5 + 0.5 );
+    section = section % 16;
+    return directions[ section ];
   }
 
   BackgroundImage() {
@@ -587,16 +608,6 @@ class App extends React.Component {
       )
     }
 
-    const getDirection = ( angle ) => {
-      let directions = ["N","NNE","NE","ENE","E",
-        "ESE", "SE", "SSE","S",
-        "SSW","SW","WSW","W",
-        "WNW","NW","NNW" ];
-      let section = parseInt( angle/22.5 + 0.5 );
-      section = section % 16;
-      return directions[ section ];
-    }
-
     const getNextPrecipitation = () => {
       for (let i = 1; i < this.state.dailyWeather.length; i++) {
         if (this.state.dailyWeather[i].precipitationAmount > 0) {
@@ -842,7 +853,7 @@ class App extends React.Component {
                 </div>
               </div>
               <div id='wind-direction'>
-                  <div id='wind-direction-cardinal'>{getDirection(this.state.currentWeather.windDirection)}</div>
+                  <div id='wind-direction-cardinal'>{this.getWindDirection(this.state.currentWeather.windDirection)}</div>
                   <div id='wind-direction-degrees'>{this.state.currentWeather.windDirection}°</div>
                 </div>
             </div>
@@ -915,15 +926,131 @@ class App extends React.Component {
   }
 
   DetailView() {
+    const getCurrentIcon = () => {
+      if (this.state.status === 'detail-hourly') {
+        return (<FontAwesomeIcon icon={faClock} />)
+      } else if (this.state.status === 'detail-daily') {
+        return <FontAwesomeIcon icon={faCalendar} />
+      }
+    }
+
+    const WeatherDetails = () => {
+      if (this.state.status === 'detail-hourly') {
+        return (
+          this.state.hourlyWeather.map((item) => {
+            if (Number(item.time.slice(0, 2)) === currDate.getHours()) {
+              return (<div className='info-bar current-info-bar'>
+              <div>{item.time}</div>
+              <div>{this.getDescriptionFromWeatherCode(item.weatherCode)}</div>
+              <div>{item.temperature}°</div>
+              <div>{item.precipitationProbability}%</div>
+              <div>{item.feelsLike}°</div>
+              <div>{item.pressure} inHg</div>
+              <div>{item.humidity}%</div>
+              <div>{((item.visibility) / 5280).toFixed(1)} mi</div>
+              <div>{item.windSpeed} mph</div>
+              <div>{item.windGusts} mph</div>
+              <div>{this.getWindDirection(item.windDirection)}</div>
+              <div>{item.uvIndex.toFixed(1)}</div>
+            </div>);
+            }
+            return (<div className='info-bar'>
+              <div>{item.time}</div>
+              <div>{this.getDescriptionFromWeatherCode(item.weatherCode)}</div>
+              <div>{item.temperature}°</div>
+              <div>{item.precipitationProbability}%</div>
+              <div>{item.feelsLike}°</div>
+              <div>{item.pressure} inHg</div>
+              <div>{item.humidity}%</div>
+              <div>{((item.visibility) / 5280).toFixed(1)} mi</div>
+              <div>{item.windSpeed} mph</div>
+              <div>{item.windGusts} mph</div>
+              <div>{this.getWindDirection(item.windDirection)}</div>
+              <div>{item.uvIndex.toFixed(1)}</div>
+            </div>);
+          })
+        )
+      } else {
+        return (
+          this.state.dailyWeather.map((item) => {
+            let date = new Date(item.date);
+            if (date.getDate() === currDate.getDate()) {
+              return (<div className='info-bar current-info-bar'>
+              <div>{date.toLocaleString('default', { month: 'long' }).slice(0, 3) + " " + date.getDate()}</div>
+              <div>{this.getDescriptionFromWeatherCode(item.weatherCode)}</div>
+              <div>{item.maxTemperature}°</div>
+              <div>{item.precipitationProbability}%</div>
+              <div>{item.feelsLike}°</div>
+              <div>{item.pressure} inHg</div>
+              <div>{item.humidity}%</div>
+              <div>{((item.visibility) / 5280).toFixed(1)} mi</div>
+              <div>{item.windSpeed} mph</div>
+              <div>{item.windGusts} mph</div>
+              <div>{this.getWindDirection(item.windDirection)}</div>
+              <div>{item.uvIndex.toFixed(1)}</div>
+            </div>);
+            }
+            return (<div className='info-bar'>
+              <div>{date.toLocaleString('default', { month: 'long' }).slice(0, 3) + " " + date.getDate()}</div>
+              <div>{this.getDescriptionFromWeatherCode(item.weatherCode)}</div>
+              <div>{item.maxTemperature}°</div>
+              <div>{item.precipitationProbability}%</div>
+              <div>{item.feelsLike}°</div>
+              <div>{item.pressure} inHg</div>
+              <div>{item.humidity}%</div>
+              <div>{((item.visibility) / 5280).toFixed(1)} mi</div>
+              <div>{item.windSpeed} mph</div>
+              <div>{item.windGusts} mph</div>
+              <div>{this.getWindDirection(item.windDirection)}</div>
+              <div>{item.uvIndex.toFixed(1)}</div>
+            </div>);
+          })
+        )
+      }
+    }
+
     return (
       <div id='container'>
         {this.BackgroundImage()}
         <div id='detail-view-container'>
           <div id='top-bar'>
-            <button id='close-button'><FontAwesomeIcon icon={faCircleXmark} /></button>
-            <h1>Hourly</h1>
-            <div id='hourly-daily-selector'>Hourly<FontAwesomeIcon icon={faAngleDown} /></div>
+            <button id='close-button' onClick={() => {this.setState({status: "normal"})}}><FontAwesomeIcon icon={faCircleXmark} /></button>
+            <h1 id='detail-viewer-title'>Hourly</h1>
+            <div id='hourly-daily-selector' onClick = {() => {
+              let element = document.getElementById("hourly-daily-selector-menu");
+              if (element.style.display === 'none') {
+                element.style.display = "block";
+              } else {
+                element.style.display = "none";
+              }
+            }}>{getCurrentIcon()}<FontAwesomeIcon icon={faAngleDown} /></div>
           </div>
+          <div id='hourly-daily-selector-menu'>
+            <div id='hourly-option' className='menu-option' onClick = {() => {
+              this.setState({status: "detail-hourly"})
+              document.getElementById("detail-viewer-title").innerHTML = "Hourly";
+            }}>Hourly<FontAwesomeIcon icon={faClock} /></div>
+            <div className='divider'></div>
+            <div id='daily-option' className='menu-option' onClick = {() => {
+              this.setState({status: "detail-daily"})
+              document.getElementById("detail-viewer-title").innerHTML = "Daily";
+            }}>Daily<FontAwesomeIcon icon={faCalendar} /></div>
+          </div>
+          <div id='label-bar'>
+            <div>When</div>
+            <div>Weather</div>
+            <div>Temp</div>
+            <div>% Precip</div>
+            <div>Feels Like</div>
+            <div>Pressure</div>
+            <div>Humidity</div>
+            <div>Visibility</div>
+            <div>Wind Speed</div>
+            <div>Wind Gusts</div>
+            <div>Wind Dir</div>
+            <div>UV Index</div>
+          </div>
+          <WeatherDetails />
         </div>
       </div>
     )
