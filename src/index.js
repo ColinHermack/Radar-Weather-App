@@ -39,6 +39,7 @@ class App extends React.Component {
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
+    this.getDescriptionFromWeatherCode = this.getDescriptionFromWeatherCode.bind(this);
   }
 
   componentDidMount() {
@@ -72,44 +73,45 @@ class App extends React.Component {
     </div>)
   }
 
+  getDescriptionFromWeatherCode(code) {
+    if (code <= 2) {
+      return ("Clear");
+    } else if (code === 3) {
+      return ("Cloudy");
+    } else if (code >= 4 && code <= 6) {
+      return ("Haze");
+    } else if ((code >= 7 && code <= 9) || (code >= 30 && code <= 35)) {
+      return ("Dust Storm");
+    } else if (code === 10) {
+      return ("Mist");
+    } else if (code === 11 || code === 12) {
+      return ("Fog");
+    } else if (code === 20 || (code >= 50 && code <= 59)) {
+      return ("Drizzle");
+    } else if (code === 21) {
+      return ("Light Rain");
+    } else if (code === 22 || code === 23) {
+      return ("Light Snow");
+    } else if (code === 24) {
+      return ("Freezing Rain");
+    } else if (code === 25 || (code >= 60 && code <= 69)) {
+      return ("Rain");
+    } else if (code === 26 || (code >= 70 && code <= 78)) {
+      return ("Snow");
+    } else if (code === 27 || code === 79) {
+      return ("Hail");
+    } else if (code === 28) {
+      return ("Fog");
+    } else if (code === 29) {
+      return ("Thunderstorm")
+    } else if (code >= 36 && code <= 39) {
+      return ("Blizzard");
+    } else if (code >= 40 && code <= 49){
+      return ("Fog");
+    }
+  }
+
   populateData(latitude = undefined, longitude = undefined) {
-    const getDescriptionFromWeatherCode = (code) => {
-      if (code <= 2) {
-        return ("Clear");
-      } else if (code === 3) {
-        return ("Cloudy");
-      } else if (code >= 4 && code <= 6) {
-        return ("Haze");
-      } else if ((code >= 7 && code <= 9) || (code >= 30 && code <= 35)) {
-        return ("Dust Storm");
-      } else if (code === 10) {
-        return ("Mist");
-      } else if (code === 11 || code === 12) {
-        return ("Fog");
-      } else if (code === 20 || (code >= 50 && code <= 59)) {
-        return ("Drizzle");
-      } else if (code === 21) {
-        return ("Light Rain");
-      } else if (code === 22 || code === 23) {
-        return ("Light Snow");
-      } else if (code === 24) {
-        return ("Freezing Rain");
-      } else if (code === 25 || (code >= 60 && code <= 69)) {
-        return ("Rain");
-      } else if (code === 26 || (code >= 70 && code <= 78)) {
-        return ("Snow");
-      } else if (code === 27 || code === 79) {
-        return ("Hail");
-      } else if (code === 28) {
-        return ("Fog");
-      } else if (code === 29) {
-        return ("Thunderstorm")
-      } else if (code >= 36 && code <= 39) {
-        return ("Blizzard");
-      } else if (code >= 40 && code <= 49){
-        return ("Fog");
-      }
-    } 
     if (latitude !== undefined && longitude !== undefined) {
       this.setState({latitude: latitude, longitude: longitude});
     } else {
@@ -129,7 +131,7 @@ class App extends React.Component {
           currentWeather: {
             temperature: Math.round(data.current.temperature_2m),
             weatherCode: data.current.weather_code,
-            summary: getDescriptionFromWeatherCode(data.current.weather_code),
+            summary: this.getDescriptionFromWeatherCode(data.current.weather_code),
             high: Math.round(data.daily.temperature_2m_max[0]),
             low: Math.round(data.daily.temperature_2m_min[0]),
             isDay: data.current.is_day,
@@ -142,7 +144,7 @@ class App extends React.Component {
             dewPoint: data.hourly.dew_point_2m[currDate.getHours()],
             pressure: (0.029529983071445 * data.current.pressure_msl).toFixed(2),
             visibility: (data.hourly.visibility[currDate.getHours()] / 5280).toFixed(1),
-            description: getDescriptionFromWeatherCode(data.current.weather_code)
+            description: this.getDescriptionFromWeatherCode(data.current.weather_code)
           }
         })
         //Get hourly weather for 48 hours
@@ -292,12 +294,78 @@ class App extends React.Component {
         this.setState({
           airQuality: data.current.us_aqi
         })
-      })
-
+    })
   }
 
   mainPage() {
     const LocationsList = () => {
+      useEffect(() => {
+        //Get cookies
+        let locations = document.cookie;
+        locations = locations.slice(locations.indexOf("=") + 1);
+        locations = locations.split(",");
+        locations.pop();
+        for (let i = 0; i < locations.length; i++) {
+          locations[i] = {
+            latitude:  Number(locations[i].split("&")[0]),
+            longitude: Number(locations[i].split("&")[1])
+          }
+        }
+
+        //Clear out the locations list in case this is a rerender
+        let currentWeather = document.getElementById('current-location-widget');
+        document.getElementById("locations-list").innerHTML = "";
+        document.getElementById("locations-list").appendChild(currentWeather);
+        let divider = document.createElement("div");
+        divider.classList.add("divider");
+        document.getElementById("locations-list").appendChild(divider);
+        for (let i = 0; i < locations.length; i++) {
+          let node = document.createElement("div");
+          node.classList.add("location-widget");
+          node.setAttribute("latitude", locations[i].latitude);
+          node.setAttribute("longitude", locations[i].longitude);
+  
+          let leftNode = document.createElement("div");
+          leftNode.classList.add("location-left");
+          let locationNode = document.createElement("div");
+          locationNode.classList.add("location-name");
+          leftNode.appendChild(locationNode);
+  
+          let conditionsNode = document.createElement("div");
+          conditionsNode.classList.add("location-weather-description");
+          leftNode.appendChild(conditionsNode);
+  
+          let rightNode = document.createElement("div");
+          rightNode.classList.add("location-right");
+          let temperatureNode = document.createElement("div");
+          temperatureNode.classList.add("location-temperature");
+          rightNode.appendChild(temperatureNode);
+  
+          node.appendChild(leftNode);
+          node.appendChild(rightNode);
+  
+          let divider = document.createElement("div");
+          divider.classList.add("divider");
+  
+          document.getElementById("locations-list").appendChild(node);
+          document.getElementById("locations-list").appendChild(divider);
+
+          fetch(`https://api.open-meteo.com/v1/forecast?latitude=${locations[i].latitude}&longitude=${locations[i].longitude}&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto`)
+            .then((response) => response.json())
+            .then((data) => {
+              conditionsNode.innerHTML = this.getDescriptionFromWeatherCode(data.current.weather_code);
+              temperatureNode.innerHTML = Math.round(data.current.temperature_2m) + "°";
+            })
+
+          fetch(`https://api.weather.gov/points/${locations[i].latitude},${locations[i].longitude}`)
+            .then((response) => response.json())
+            .then((data) => {
+              locationNode.innerHTML = data.properties.relativeLocation.properties.city;
+            })
+            .catch((error) => {console.log(error)})
+        }
+      }, [])
+
       return (<div id='locations-list'>
         <div id='current-location-widget' className='location-widget' latitude={this.state.latitude} longitude={this.state.longitude}>
           <div className='location-left'>
@@ -672,6 +740,16 @@ class App extends React.Component {
 
             document.getElementById("locations-list").appendChild(node);
             document.getElementById("locations-list").appendChild(divider);
+
+            let locations = document.getElementsByClassName("location-widget");
+            let newCookie = "locations=";
+            for (let i = 1; i < locations.length; i++) {
+              newCookie += `${locations[i].getAttribute("latitude")}&${locations[i].getAttribute("longitude")},`
+            }
+          let expirationDate = new Date();
+          expirationDate.setFullYear(expirationDate.getFullYear() + 5);
+          newCookie += `; expires=${expirationDate.toUTCString()};`
+          document.cookie = newCookie;
           }} /></div>
           <input id='location-search-input' placeholder='🔎 Search' onChange={getCities}/>
         </nav>
@@ -807,6 +885,10 @@ class App extends React.Component {
           </div>
           <SmallRadar/>
         </div>
+        <div id='bottom-controls'>
+        <button id='clear-saved'>Clear Saved</button>
+        </div>
+        
       </div>
     </div>)
 
