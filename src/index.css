@@ -162,18 +162,20 @@ nav {
   border-radius: 10px;
   overflow-x: auto;
   overflow-y: auto;
+  top: 5vh;
 }
 
 #top-bar {
   width: 90vw;
-  height: 50px;
+  height: 70px;
   border-bottom: 0.5px solid rgb(100, 100, 100);
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   position: fixed;
-  z-index: 2;
+  top: 3vh;
+  z-index: 3;
   background-color: rgb(30, 30, 30);
   border-radius: 10px 10px 0 0;
 }
@@ -232,6 +234,7 @@ h1 {
   font-weight: 600;
   border-radius: 10px;
   z-index: 2;
+  box-shadow: 1px 1px 7px black;
 }
 
 .menu-option {
