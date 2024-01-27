@@ -45,14 +45,13 @@ class App extends React.Component {
     this.BackgroundImage = this.BackgroundImage.bind(this);
     this.getWindDirection = this.getWindDirection.bind(this);
     this.Alerts = this.Alerts.bind(this);
+    this.RadarViewer = this.RadarViewer.bind(this);
   }
 
   componentDidMount() {
     //Try to get the user's coordinate location
     if (navigator.geolocation){
       navigator.geolocation.getCurrentPosition((position) => {
-        console.log(position.coords.latitude);
-        console.log(position.coords.longitude);
         this.populateData(position.coords.latitude, position.coords.longitude);
       });
     }
@@ -130,7 +129,6 @@ class App extends React.Component {
     fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,dew_point_2m,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=precipitation_sum,apparent_temperature_min,apparent_temperature_max,uv_index_max,weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,rain_sum,snowfall_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
       .then(response => response.json())
       .then(data => {
-        console.log(data);
         //Determine if it is daytime or not
         this.setState({isDay: data.current.is_day});
 
@@ -285,21 +283,26 @@ class App extends React.Component {
         fetch(`https://api.weather.gov/alerts/active/zone/${data.properties.forecastZone.slice(data.properties.forecastZone.indexOf("forecast/") + 9)}`)
           .then((response) => response.json())
           .then((data) => {
-            console.log(data);
             let warnings = [];
             for (let i = 0; i < data.features.length; i++) {
               if (data.features[i].properties.ends !== null) {
                 warnings.push({
                   title: data.features[i].properties.event,
                   description: data.features[i].properties.description,
-                  instructions: data.features[i].properties.instructions,
-                  ends: data.features[i].properties.ends.slice(0, 19)
+                  instructions: data.features[i].properties.instruction,
+                  ends: data.features[i].properties.ends.slice(0, 19),
+                  severity: data.features[i].properties.severity,
+                  areas: data.features[i].properties.areaDesc,
+                  issuer: data.features[i].properties.senderName
                 })
               } else {
                 warnings.push({
                   title: data.features[i].properties.event,
                   description: data.features[i].properties.description,
-                  instructions: data.features[i].properties.instructions
+                  instructions: data.features[i].properties.instruction,
+                  severity: data.features[i].properties.severity,
+                  areas: data.features[i].properties.areaDesc,
+                  issuer: data.features[i].properties.senderName
                 })
               }
               
@@ -468,7 +471,7 @@ class App extends React.Component {
         }, [location.longitude, location.latitude, zoom]);
 
         return (
-          <div className="map-wrap">
+          <div className="map-wrap" onClick={() => {this.setState({status: "radar-weather"})}}>
             <div ref={mapContainer} className="map" />
           </div>
         );
@@ -887,7 +890,7 @@ class App extends React.Component {
                 <div id='dew-point'>The dew point is {Math.round(this.state.currentWeather.dewPoint)}° right now.</div>
               </div>
           </div>
-          <div id='severe-weather' className='weather-details-box'>
+          <div id='severe-weather' className='weather-details-box' onClick = {() => {this.setState({status: "alerts"})}}>
             <h1><FontAwesomeIcon icon={faTornado} /> SEVERE WEATHER</h1>
             <div className='divider'></div>
             <SevereWeather />
@@ -1023,7 +1026,6 @@ class App extends React.Component {
       } else {
         return (
           this.state.dailyWeather.map((item) => {
-            console.log(item.date);
             let date = new Date(item.date);
             date.setHours(date.getHours() + 5);
             if (date.getDate() === currDate.getDate()) {
@@ -1098,7 +1100,81 @@ class App extends React.Component {
   }
 
   Alerts() {
+    return (
+      <div id='container'>
+      {this.BackgroundImage()}
+      <div id='severe-weather-details'>
+        <div id='severe-weather-top'><FontAwesomeIcon icon={faCircleXmark} id="close-severe-weather-button" onClick={() => {
+          this.setState({status: "normal"})
+        }}/></div>
+        <div id='severe-weather-header'><FontAwesomeIcon icon={faTriangleExclamation} id='severe-weather-header'/></div>
+        <h1>Severe Weather Alerts</h1>
+        {this.state.warnings.map((item) => {
+          return (
+            <div className='severe-weather-warning' key={item.title}>
+              <div className='warning-name'><h2>{item.title}</h2></div>
+              <div className='divider'></div>
+              <div className='warning-severity'>
+                <h2>Severity</h2>
+                <div>{item.severity}</div>
+              </div>
+              <div className='divider'></div>
+              <div className='warning-instruction'>
+                <h2>Instructions</h2>
+                <div>{item.instructions}</div>
+              </div>
+              <div className='divider'></div>
+              <div className='warning-description'>
+                <h2>Description</h2>
+                <div>{item.description}</div>
+              </div>
+              <div className='divider'></div>
+              <div className='warning-areas'>
+                <h2>Areas Affected</h2>
+                <div>{item.areas}</div>
+              </div>
+              <div className='divider'></div>
+              <div className='warning-issuer'>
+                <h2>Issued By</h2>
+                <div>{item.issuer}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      </div>
+    )
+    
+  }
 
+  RadarViewer() {
+    const Map = () => {
+      let mapContainer = useRef(null);
+      let map = useRef(null);
+      let location = {longitude: this.state.longitude, latitude: this.state.latitude};
+      let [zoom] = useState(7);
+  
+      useEffect(() => {
+        if (map.current) return;
+        
+        map.current = new maptilersdk.Map({
+          container: mapContainer.current,
+          style: maptilersdk.MapStyle.WINTER,
+          center: [location.longitude, location.latitude],
+          zoom: zoom
+        });
+      }, [location.longitude, location.latitude, zoom])
+
+      return (
+        <div className='map-container'>
+          <div ref={mapContainer} className='map' />
+        </div>
+      )
+    }
+    return (<div id='container'>
+      {this.BackgroundImage()}
+      <Map />
+    </div>)
   }
 
   render() {
@@ -1111,7 +1187,9 @@ class App extends React.Component {
     } else if (this.state.status === 'detail-hourly' || this.state.status === 'detail-daily') {
       return (this.DetailView());
     } else if (this.state.status === 'alerts') {
-
+      return (this.Alerts())
+    } else if (this.state.status.includes("radar")) {
+      return (this.RadarViewer());
     }
   }
 }
