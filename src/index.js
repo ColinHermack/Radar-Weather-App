@@ -5,7 +5,8 @@ import rockyMountain from "./media/RockyMountain.jpg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, 
   faIcicles, faCloudBolt, faClock, faCalendar, faFire, faWind, faDroplet, faTemperatureHalf, faWater, faTornado, faUser, 
-  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus, faLocationArrow, faCircleXmark, faAngleDown } from '@fortawesome/free-solid-svg-icons';
+  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus, faLocationArrow, faCircleXmark, faAngleDown, faPlay,
+  faPause } from '@fortawesome/free-solid-svg-icons';
 import * as maptilersdk from '@maptiler/sdk';
 import * as maptilerweather from '@maptiler/weather';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
@@ -33,10 +34,10 @@ class App extends React.Component {
       dailyWeather: [],
       isDay: true,
       warnings: [],
-      cwa: undefined,
+      cwa: "",
       searchResults: [],
       savedLocations: [],
-      status: "normal"
+      status: "normal",
     };
     this.getLocationPage = this.getLocationPage.bind(this);
     this.populateData = this.populateData.bind(this);
@@ -259,15 +260,6 @@ class App extends React.Component {
           state: data.properties.relativeLocation.properties.state,
           cwa: data.properties.cwa
         })
-        //Get the forecast discussion and parse the HTML to extract the actual text of the forecast discussion
-        fetch(`https://forecast.weather.gov/product.php?site=${data.properties.cwa}&issuedby=${data.properties.cwa}&product=AFD&format=ci&version=1&glossary=1`)
-          .then((response) => response.text())
-          .then((data) => {
-            this.setState({
-              forecastDiscussion: data,
-            })
-          })
-          .catch((error) => {console.log(error)})
         //Get the NWS forecast
         fetch(data.properties.forecast)
           .then((response) => response.json())
@@ -464,6 +456,7 @@ class App extends React.Component {
               opacity: 0.8,
             });
             map.current.addLayer(weatherLayer, 'Water');
+            map.current.setPaintProperty("Water", 'fill-color', "rgba(0, 0, 0, 0.4)");
           })
 
           
@@ -471,7 +464,7 @@ class App extends React.Component {
         }, [location.longitude, location.latitude, zoom]);
 
         return (
-          <div className="map-wrap" onClick={() => {this.setState({status: "radar-weather"})}}>
+          <div className="map-wrap" onClick={() => {this.setState({status: "radar-default"})}}>
             <div ref={mapContainer} className="map" />
           </div>
         );
@@ -895,7 +888,7 @@ class App extends React.Component {
             <div className='divider'></div>
             <SevereWeather />
           </div>
-          <div id='forecast-discussion' className='weather-details-box'>
+          <div id='forecast-discussion' className='weather-details-box' onClick = {() => {window.open(`https://forecast.weather.gov/product.php?site=${this.state.cwa}&issuedby=${this.state.cwa}&product=AFD&format=ci&version=1&glossary=1`)}}>
             <h1><FontAwesomeIcon icon={faUser} /> FORECAST DISCUSSION</h1>
             <div className='divider'></div>
             <div id='forecast-discussion-container'>Forecast discussion for your area issued by {this.state.cwa}.</div>
@@ -1148,11 +1141,47 @@ class App extends React.Component {
   }
 
   RadarViewer() {
+    const getCurrentRadarType = () => {
+      if (this.state.status === 'radar-default') {
+        return "Radar";
+      } else if (this.state.status === 'radar-temperature') {
+        return "Temperature";
+      } else if (this.state.status === 'radar-wind') {
+        return "Wind";
+      } else if (this.state.status === 'radar-precipitation') {
+        return "Precipitation";
+      } else if (this.state.status === 'radar-clouds') {
+        return "Cloud Cover";
+      } else if (this.state.status === 'radar-pressure') {
+        return "Pressure";
+      }
+    }
+
+    const toggleOptionsVisiblity = () => {
+      let options = document.getElementById("radar-selector-options");
+            if (options.style.display === 'none') {
+              options.style.display = 'block';
+            } else {
+              options.style.display = 'none';
+            }
+    }
+
     const Map = () => {
+      const refreshTime = () => {
+        const d = weatherLayer.getAnimationTimeDate();
+        document.getElementById("radar-time").innerText = d.toString().slice(0, d.toString().indexOf(" GMT"));
+        document.getElementById("radar-slider").value = +d;
+      }
+
       let mapContainer = useRef(null);
       let map = useRef(null);
       let location = {longitude: this.state.longitude, latitude: this.state.latitude};
-      let [zoom] = useState(7);
+      let [zoom] = useState(4);
+
+      let weatherLayer = new maptilerweather.RadarLayer({
+        opacity: 0.8,
+      });
+
   
       useEffect(() => {
         if (map.current) return;
@@ -1163,17 +1192,133 @@ class App extends React.Component {
           center: [location.longitude, location.latitude],
           zoom: zoom
         });
+
+        new maptilersdk.Marker({color: "#29a7ba"})
+          .setLngLat([this.state.longitude, this.state.latitude])
+          .addTo(map.current);
+      
+        map.current.on("load", () => {
+          if (this.state.status === 'radar-temperature') {
+            weatherLayer = new maptilerweather.TemperatureLayer({
+              colorramp: maptilerweather.ColorRamp.builtin.TEMPERATURE_3
+            });
+          } else if (this.state.status === 'radar-wind') {
+            weatherLayer = new maptilerweather.WindLayer();
+          } else if (this.state.status === 'radar-precipitation') {
+            weatherLayer = new maptilerweather.PrecipitationLayer();
+          } else if (this.state.status === 'radar-clouds') {
+            weatherLayer = new maptilerweather.RadarLayer({
+              opacity: 0.8,
+              colorramp: maptilerweather.ColorRamp.builtin.RADAR_CLOUD,
+            });
+          } else if (this.state.status === 'radar-pressure') {
+            weatherLayer = new maptilerweather.PressureLayer({
+              opacity: 0.8,
+            });
+          }
+
+          weatherLayer.on("sourceReady", event => {
+            const startDate = weatherLayer.getAnimationStartDate();
+            const endDate = weatherLayer.getAnimationEndDate();
+            const currentDate = weatherLayer.getAnimationTimeDate();
+    
+            let timeSlider = document.getElementById("radar-slider");
+            timeSlider.min = +startDate;
+            timeSlider.max = +endDate;
+            timeSlider.value = +currentDate;
+    
+            refreshTime();
+          });
+
+          weatherLayer.on("animationTimeSet", event => {
+            refreshTime();
+          });
+
+          document.getElementById("radar-slider").addEventListener("input", (evt) => {
+            weatherLayer.setAnimationTime(parseInt(document.getElementById("radar-slider").value / 1000))
+          });
+
+          map.current.setPaintProperty("Water", 'fill-color', "rgba(0, 0, 0, 0.4)");
+          map.current.addLayer(weatherLayer, 'Water');
+          weatherLayer.animateByFactor(0);
+        })
       }, [location.longitude, location.latitude, zoom])
+      /*
+      const [playStatus, updatePlayPause] = useState("pause");
+
+      const getPlayPauseIcon = () => {
+        if (playStatus === 'play') {
+          return <FontAwesomeIcon icon={faPause} />
+        } else {
+          return <FontAwesomeIcon icon={faPlay} />
+        }
+      }
+
+      const handlePlayPauseClick = () => {
+        if (playStatus === 'play') {
+          updatePlayPause("pause");
+          weatherLayer.animateByFactor(0);
+        } else {
+          updatePlayPause("play")
+          weatherLayer.animateByFactor(3600);
+        }
+      } */
+
 
       return (
-        <div className='map-container'>
+        <div className='large-map-wrap'>
+          <div id='radar-controls'>
+          <div id='radar-controls-top'>
+            <h1>{getCurrentRadarType()}</h1>
+          </div>
+          <input type="range" min="1" max="100" defaultValue="0" className="slider" id="radar-slider"></input>
+          <div id='radar-time'></div>
+          </div>
           <div ref={mapContainer} className='map' />
         </div>
       )
     }
     return (<div id='container'>
       {this.BackgroundImage()}
-      <Map />
+      <div id='map-container'>
+        <div id='top-radar-bar'>
+          <div id='close-button' onClick={() => {this.setState({status: "normal"})}}><FontAwesomeIcon icon={faCircleXmark} /></div>
+          <div id='radar-selector' onClick={() => {toggleOptionsVisiblity()}}>{getCurrentRadarType()}<FontAwesomeIcon icon={faAngleDown} /></div>
+        </div>
+        <div id='radar-selector-options'>
+          <div onClick={() => {
+            this.setState({status: "radar-default"});
+            toggleOptionsVisiblity();
+            }}>Radar</div>
+          <div className='divider'></div>
+          <div onClick={() => {
+            this.setState({status: "radar-temperature"});
+            toggleOptionsVisiblity();
+            }}>Temperature</div>
+          <div className='divider'></div>
+          <div onClick={
+            () => {this.setState({status: "radar-wind"});
+            toggleOptionsVisiblity();
+            }}>Wind</div>
+          <div className='divider'></div>
+          <div onClick={
+            () => {this.setState({status: "radar-precipitation"})
+            toggleOptionsVisiblity();
+            }}>Precipitation</div>
+          <div className='divider'></div>
+          <div onClick={() => {
+            this.setState({status: "radar-clouds"});
+            toggleOptionsVisiblity();
+            }}>Cloud Cover</div>
+          <div className='divider'></div>
+          <div onClick={
+            () => {this.setState({status: "radar-pressure"});
+            toggleOptionsVisiblity();
+            }}>Pressure</div>
+        </div>
+        <Map />
+      </div>
+      
     </div>)
   }
 
