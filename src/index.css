@@ -39,6 +39,11 @@ body {
   height: 100vh;
 }
 
+#location-container p {
+  width: 100%;
+  text-align: center;
+}
+
 #location-input-box {
   display: flex;
   flex-direction: column;
@@ -154,19 +159,15 @@ nav {
 
 /* Hourly and daily detail viewer styling */
 #detail-view-container {
-  width: 90vw;
-  margin-left: 5vw;
-  margin-top: 5vh;
-  height: 90vh;
+  width: 100vw;
+  height: 100vh;
   background-color: rgb(30, 30, 30);
-  border-radius: 10px;
   overflow-x: auto;
   overflow-y: auto;
-  top: 5vh;
 }
 
 #top-bar {
-  width: 90vw;
+  width: 100%;
   height: 70px;
   border-bottom: 0.5px solid rgb(100, 100, 100);
   display: flex;
@@ -174,28 +175,18 @@ nav {
   justify-content: space-between;
   align-items: center;
   position: fixed;
-  top: 3vh;
   z-index: 3;
   background-color: rgb(30, 30, 30);
-  border-radius: 10px 10px 0 0;
 }
 
 #close-button {
-  background-color: rgb(170, 170, 170);
-  color: rgb(100, 100, 100);
-  border: none;
-  font-size: 1.5em;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-  margin-left: 20px;
+  color: var(--main-text-color);
+  font-size: 1.3em;
+  margin-left: 13px;
 }
 
 #close-button:hover {
-  color: rgb(130, 130, 130);
+  color: rgb(180, 180, 180);
 }
 
 h1 {
@@ -227,14 +218,15 @@ h1 {
   display: none;
   background-color: rgb(70, 70, 70);
   position: absolute;
-  top: calc(5vh + 50px);
-  right: calc(5vw + 20px);
+  top: 80px;
+  right: 13px;
   width: 150px;
   color: var(--main-text-color);
   font-weight: 600;
   border-radius: 10px;
   z-index: 2;
   box-shadow: 1px 1px 7px black;
+  overflow: hidden;
 }
 
 .menu-option {
@@ -247,7 +239,6 @@ h1 {
 
 .menu-option:hover {
   background-color: rgb(100, 100, 100);
-  border-radius: 10px;
 }
 
 #label-bar {
@@ -259,7 +250,7 @@ h1 {
   justify-content: left;
   align-items: center;
   position: relative;
-  top: 50px;
+  top: 70px;
   font-weight: 700;
   color: var(--main-text-color);
   border-bottom: 1.5px solid rgb(100, 100, 100);
@@ -285,7 +276,7 @@ h1 {
   align-items: center;
   font-weight: 400;
   position: relative;
-  top: 50px;
+  top: 70px;
   color: var(--main-text-color);
   border-bottom: 0.5px solid rgb(100, 100, 100);
 }
@@ -302,20 +293,20 @@ h1 {
   background-color: rgba(100, 100, 100, 0.5)
 }
 
+#location-search-results {
+  z-index: 4;
+}
+
 /* Severe weather styling */
 
 #severe-weather-details {
-  width: 90vw;
-  min-height: 90vh;
-  margin-left: 5vw;
-  margin-top: 5vh;
+  width: 100vw;
+  min-height: 100vh;
   background-color: rgb(30, 30, 30);
-  border-radius: 10px;
   display: flex;
   flex-direction: column;
   justify-content: top;
   align-items: center;
-  margin-bottom: 40px;
 }
 
 #severe-weather-top {
@@ -370,148 +361,90 @@ h1 {
 
 /* Radar Viewer Styling */
 #map-container {
-  width: 90vw;
-  height: 90vh;
-  margin-left: 5vw;
-  margin-top: 5vh;
-  background-color: rgb(30, 30, 30);
-  border-radius: 10px;
-}
-
-#top-radar-bar {
-  width: 100%;
-  height: 50px;
-  border-radius: 10px 10px 0 0;
-  border-bottom: 0.5px solid rgb(100, 100, 100);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  width: 100vw;
+  height: 100vh;
 }
 
 .large-map-wrap {
-  width: calc(100% - 50px);
-  height: calc(95% - 50px);
-  margin-top: 25px;
-  margin-left: 25px;
+  width: 100%;
+  height: 100%;
 }
 
-#radar-selector {
-  background-color: rgb(100, 100, 100);
-  color: var(--main-text-color);
-  padding: 7px 15px;
+#radar-close-button {
+  position: absolute;
+  display: flex;
+  top: 10px;
+  left: 10px;
+  width: 50px;
+  height: 20px;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 1px 1px 5px rgba(120, 120, 120, 0.5);
+  background-color: rgb(230, 230, 230);
+  color: rgb(40, 40, 40);
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+#radar-close-button:hover {
+  background-color: rgb(210, 210, 210);
+}
+
+#radar-selector-button {
+  position: absolute;
+  top: 60px;
+  left: 10px;
+  width: 50px;
+  height: 20px;
+  padding: 10px;
+  background-color: rgb(230, 230, 230);
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 1px 1px 5px rgba(120, 120, 120, 0.5);
+  font-size: 1.3em;
+}
+
+#radar-selector-button:hover {
+  background-color: rgb(210, 210, 210);
+}
+
+#radar-selector-stack {
+  position: absolute;
+  display: none;
+  left: 10px;
+  top: 110px;
+  background-color: rgb(230, 230, 230);
+  border-radius: 10px;
+  font-size: 1.1em;
+  font-weight: 500;
+  color: rgb(40, 40, 40);
+  box-shadow: 1px 1px 5px rgba(120, 120, 120, 0.5);
+  overflow: hidden;
+}
+
+#radar-selector-stack div {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  width: 150px;
-  margin-right: 25px;
-  border-radius: 20px;
-  font-weight: 600;
+  padding: 5px 10px;
+  width: 200px;
 }
 
-#radar-selector:hover {
-  background-color: rgb(120, 120, 120);
+#radar-selector-stack div:hover {
+  background-color: rgb(210, 210, 210);
 }
 
-#radar-selector-options {
-  display: none;
-  position: absolute;
-  z-index: 3;
-  background-color: rgb(100, 100, 100);
-  font-weight: 500;
-  color: var(--main-text-color);
-  right: calc(5% + 25px);
-  box-shadow: 1px 1px 7px black;
-  border-radius: 7px;
-  width: 175px;
-}
-
-#radar-selector-options div {
-  padding: 10px;
-  border-radius: 7px;
-}
-
-#radar-selector-options div:hover {
-  background-color: rgb(120, 120, 120);
-}
-
-#radar-selector-options .divider {
-  padding: 0;
+#radar-selector-stack .divider {
   width: 100%;
+  height: 0.5px;
+  background-color: rgb(150, 150, 150);
   margin: 0;
-  border-radius: 0;
+  padding: 0;
 }
-
-#radar-controls {
-  width: 300px;
-  height: 100px;
-  background-color: rgb(220, 220, 220);
-  border-radius: 7px;
-  position: absolute;
-  z-index: 4;
-  bottom: 100px;
-  left: calc(50% - 150px);
-  box-shadow: 0.5px 0.5px 5px rgb(110, 110, 110);
-}
-
-#radar-controls-top h1 {
-  width: 100%;
-  color: rgb(30, 30, 30);
-  font-weight: 700;
-  font-size: 1em;
-  text-align: center;
-}
-
-#radar-play-pause {
-  background-color: rgb(190, 190, 190);
-  width: 25px;
-  height: 25px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-  font-size: 0.8em;
-}
-
-#radar-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 250px;
-  margin-left: 25px;
-  height: 4px;
-  background-color: rgb(30, 30, 30);
-  border-radius: 2px;
-}
-
-#radar-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; 
-  appearance: none;
-  width: 10px; 
-  height: 10px; 
-  background-color: rgb(30, 30, 30);
-  cursor: pointer; 
-  border-radius: 50%;
-}
-
-#radar-slider::-moz-range-thumb {
-  width: 10px;
-  height: 10px; 
-  background-color: rgb(30, 30, 30);
-  cursor: pointer;
-  border-radius: 50%;
-}
-
-#radar-time {
-  color: rgb(30, 30, 30);
-  font-size: 0.6em;
-  width: 250px;
-  margin-left: 25px;
-  font-weight: 600;
-  margin-top: 10px;
-  text-align: center;
-}
-
+ 
 
 /* Main page styling for all screen sizes */
 
@@ -710,7 +643,6 @@ h1 {
   position: absolute;
   width: 100%;
   height: 100%;
-  border-radius: 5px;
 }
 
 #sunrise-sunset-container {
@@ -723,15 +655,6 @@ h1 {
   font-weight: 600;
   margin-left: 10px;
   margin-top: 5px;
-}
-
-#sunrise-sunset-chart {
-  width: 130px;
-  height: 4px;
-  border-radius: 2px;
-  margin-left: 10px;
-  margin-top: 25px;
-  background-color: rgba(30, 30, 30, 0.5);
 }
 
 #sunrise-sunset-progress {

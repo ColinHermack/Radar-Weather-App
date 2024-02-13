@@ -5,8 +5,8 @@ import rockyMountain from "./media/RockyMountain.jpg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faChalkboard, faSun, faMoon, faCloud, faSmog, faCloudRain, faSnowflake, faCloudShowersHeavy, 
   faIcicles, faCloudBolt, faClock, faCalendar, faFire, faWind, faDroplet, faTemperatureHalf, faWater, faTornado, faUser, 
-  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus, faLocationArrow, faCircleXmark, faAngleDown, faPlay,
-  faPause } from '@fortawesome/free-solid-svg-icons';
+  faEye, faGauge, faHurricane, faTriangleExclamation, faPlus, faLocationArrow, faCircleXmark, faAngleDown,
+  faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 import * as maptilersdk from '@maptiler/sdk';
 import * as maptilerweather from '@maptiler/weather';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
@@ -18,7 +18,7 @@ class App extends React.Component {
     super(props);
     this.state = {
       latitude: undefined,
-      longitude: undefined,
+      longitude: undefined,  
       city: "",
       state: "",
       currentWeather: {
@@ -58,7 +58,7 @@ class App extends React.Component {
     }
   }
 
-  //Get the user's ZIP code if browser blocks coordinate geolocation
+  //Geolocate via zip code if the browser blocks location
   getLocationPage() {
     const getCoordinatesByZip = () => {
       fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${document.getElementById('enter-zip').value}&count=10&language=en&format=json`)
@@ -80,6 +80,7 @@ class App extends React.Component {
     </div>)
   }
 
+  //Converts WMO weather codes into an English weather description
   getDescriptionFromWeatherCode(code) {
     if (code <= 2) {
       return ("Clear");
@@ -95,30 +96,36 @@ class App extends React.Component {
       return ("Fog");
     } else if (code === 20 || (code >= 50 && code <= 59)) {
       return ("Drizzle");
-    } else if (code === 21) {
+    } else if (code === 21 || code === '80') {
       return ("Light Rain");
-    } else if (code === 22 || code === 23) {
+    } else if (code === 22 || code === 23 || code === 85) {
       return ("Light Snow");
     } else if (code === 24) {
       return ("Freezing Rain");
-    } else if (code === 25 || (code >= 60 && code <= 69)) {
+    } else if (code === 25 || (code >= 60 && code <= 69) || code === 81) {
       return ("Rain");
-    } else if (code === 26 || (code >= 70 && code <= 78)) {
+    } else if (code === 26 || (code >= 70 && code <= 78) || code === 86) {
       return ("Snow");
-    } else if (code === 27 || code === 79) {
+    } else if (code === 27 || code === 79 || (code >= 87 && code <= 90)) {
       return ("Hail");
     } else if (code === 28) {
       return ("Fog");
-    } else if (code === 29) {
+    } else if (code === 29 || code > 90) {
       return ("Thunderstorm")
     } else if (code >= 36 && code <= 39) {
       return ("Blizzard");
     } else if (code >= 40 && code <= 49){
       return ("Fog");
+    } else if (code === 82) {
+      return ("Downpour");
+    } else if (code === 83 || code === 84) {
+      return ("Sleet");
     }
   }
 
+  //Call APIs to populate weather data
   populateData(latitude = undefined, longitude = undefined) {
+    //If a new latitude and longitude are passed as parameters, use those, otherwise use the ones that are already set
     if (latitude !== undefined && longitude !== undefined) {
       this.setState({latitude: latitude, longitude: longitude});
     } else {
@@ -126,10 +133,13 @@ class App extends React.Component {
       longitude = this.state.longitude;
     }
 
+    
+
     //Get weather data from the OpenMeteo API
     fetch(`https://api.open-meteo.com/v1/gfs?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,dew_point_2m,precipitation_probability,rain,showers,snowfall,weather_code,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day&daily=precipitation_sum,apparent_temperature_min,apparent_temperature_max,uv_index_max,weather_code,precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,rain_sum,snowfall_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&minutely_15=rain,snowfall&forecast_days=14`)
       .then(response => response.json())
       .then(data => {
+        console.log(data);
         //Determine if it is daytime or not
         this.setState({isDay: data.current.is_day});
 
@@ -154,8 +164,8 @@ class App extends React.Component {
             description: this.getDescriptionFromWeatherCode(data.current.weather_code)
           }
         })
-        //Get hourly weather for 48 hours
 
+        //Get hourly weather for 24 hours
         let hourlyWeather = []
         for (let i = currDate.getHours(); i < currDate.getHours() + 24; i++) {
           let hours = Number(data.hourly.time[i].slice(11, 13));
@@ -195,6 +205,7 @@ class App extends React.Component {
         this.setState({
           hourlyWeather: hourlyWeather
         })
+
         //Get daily weather for a week
         let dailyWeather = []
         for (let i = 0; i < 10; i++) {
@@ -269,41 +280,47 @@ class App extends React.Component {
             })
           })
           .catch((error) => {
-            this.setState({forecastDescription: "Not available"})
+            this.setState({
+              forecastDescription: "Not available"})
           })
-        //Get watches, warnings, and advisories for the current area
+          //Get watches, warnings, and advisories for the current area
         fetch(`https://api.weather.gov/alerts/active/zone/${data.properties.forecastZone.slice(data.properties.forecastZone.indexOf("forecast/") + 9)}`)
-          .then((response) => response.json())
-          .then((data) => {
-            let warnings = [];
-            for (let i = 0; i < data.features.length; i++) {
-              if (data.features[i].properties.ends !== null) {
-                warnings.push({
-                  title: data.features[i].properties.event,
-                  description: data.features[i].properties.description,
-                  instructions: data.features[i].properties.instruction,
-                  ends: data.features[i].properties.ends.slice(0, 19),
-                  severity: data.features[i].properties.severity,
-                  areas: data.features[i].properties.areaDesc,
-                  issuer: data.features[i].properties.senderName
-                })
-              } else {
-                warnings.push({
-                  title: data.features[i].properties.event,
-                  description: data.features[i].properties.description,
-                  instructions: data.features[i].properties.instruction,
-                  severity: data.features[i].properties.severity,
-                  areas: data.features[i].properties.areaDesc,
-                  issuer: data.features[i].properties.senderName
-                })
-              }
-              
+        .then((response) => response.json())
+        .then((data) => {
+          let warnings = [];
+          for (let i = 0; i < data.features.length; i++) {
+            if (data.features[i].properties.ends !== null) {
+              warnings.push({
+                title: data.features[i].properties.event,
+                description: data.features[i].properties.description,
+                instructions: data.features[i].properties.instruction,
+                ends: data.features[i].properties.ends.slice(0, 19),
+                severity: data.features[i].properties.severity,
+                areas: data.features[i].properties.areaDesc,
+                issuer: data.features[i].properties.senderName
+              })
+            } else {
+              warnings.push({
+                title: data.features[i].properties.event,
+                description: data.features[i].properties.description,
+                instructions: data.features[i].properties.instruction,
+                severity: data.features[i].properties.severity,
+                areas: data.features[i].properties.areaDesc,
+                issuer: data.features[i].properties.senderName
+              })
             }
-            this.setState({warnings: warnings});
-          })
-      })
-      .catch((error) => {console.log(error)})
-
+            
+          }
+          this.setState({warnings: warnings});
+        })
+    })
+    .catch((error) => { //This will not work outside of the United States
+      this.setState({
+        warnings: [],
+        city: "--",
+        cwa: "--"
+      });
+    })
     //Get air quality data from OpenMeteo Air Quality API
     fetch (`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=us_aqi&hourly=pm10,pm2_5,us_aqi`)
       .then((response) => response.json()) 
@@ -314,6 +331,7 @@ class App extends React.Component {
     })
   }
 
+  //Gets a cardinal wind direction based on the numerical degree angle
   getWindDirection(angle) {
     let directions = ["N","NNE","NE","ENE","E",
     "ESE", "SE", "SSE","S",
@@ -324,6 +342,7 @@ class App extends React.Component {
     return directions[ section ];
   }
 
+  //TODO: Make this change based on the current weather
   BackgroundImage() {
     return (<div id='background-image-container'><img id='background-image' src={rockyMountain} alt=''/></div>)
   }
@@ -519,21 +538,21 @@ class App extends React.Component {
         return <FontAwesomeIcon icon={faSmog} />
       } else if (code === 20 || (code >= 50 && code <= 59)) {  // Drizzle
         return <FontAwesomeIcon icon={faCloudRain} />
-      } else if (code === 21) { // Light rain
+      } else if (code === 21 || code === 80) { // Light rain
         return <FontAwesomeIcon icon={faCloudRain} />
-      } else if (code === 22 || code === 23) {  //Light snow
+      } else if (code === 22 || code === 23 || code === 85) {  //Light snow
         return <FontAwesomeIcon icon={faSnowflake} />
       } else if (code === 24) {  //Freezing Rain
         return <FontAwesomeIcon icon={faCloudRain} />
-      } else if (code === 25 || (code >= 60 && code <= 69)) {  //Rain
+      } else if (code === 25 || (code >= 60 && code <= 69) || code === 81 || code === 82) {  //Rain
         return <FontAwesomeIcon icon={faCloudShowersHeavy} />
-      } else if (code === 26 || (code >= 70 && code <= 78)) {  //Snow
+      } else if (code === 26 || (code >= 70 && code <= 78) || code === 83 || code === 84 || code === 86) {  //Snow
         return <FontAwesomeIcon icon={faSnowflake} />
-      } else if (code === 27 || code === 79) {  //Hail
+      } else if (code === 27 || code === 79 || (code >= 87 && code <= 90)) {  //Hail
         return <FontAwesomeIcon icon={faIcicles} />
       } else if (code === 28) {  //Fog
         return <FontAwesomeIcon icon={faSmog} />
-      } else if (code === 29) {
+      } else if (code === 29 || code > 90) {
         return <FontAwesomeIcon icon={faCloudBolt} />
       } else if (code >= 36 && code <= 39) {  //Bizzard
         return <FontAwesomeIcon icon={faSnowflake} />
@@ -551,8 +570,6 @@ class App extends React.Component {
       }
       
       let time = "";
-      let periodLength = 0;
-      let periodProgress = 0;
       if (this.state.dailyWeather.length > 0) {
         if (this.state.isDay) {
           time = this.state.dailyWeather[0].sunset.slice(11);
@@ -570,31 +587,7 @@ class App extends React.Component {
         } else if (time.slice(0, 1) === '0') {
           time = time.slice(1) + " AM";
         }
-
-        if (this.state.isDay === 1) {
-          periodLength = (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60)
-            - (Number(this.state.dailyWeather[0].sunrise.slice(14)) + Number(this.state.dailyWeather[0].sunrise.slice(11, 13)) * 60);
-        } else {
-          periodLength = (Number(this.state.dailyWeather[1].sunrise.slice(14)) + Number(this.state.dailyWeather[1].sunrise.slice(11, 13)) * 60)
-            + (1440 - (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60));
-        }
-
-        if (this.state.isDay) {
-          periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
-            - (Number(this.state.dailyWeather[0].sunrise.slice(14)) + Number(this.state.dailyWeather[0].sunrise.slice(11, 13)) * 60);
-        } else {
-          if (currDate.getHours() > 12) {
-            periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
-            - (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60);
-          } else {
-            periodProgress = (currDate.getMinutes() + currDate.getHours() * 60)
-            + (1440 - (Number(this.state.dailyWeather[0].sunset.slice(14)) + Number(this.state.dailyWeather[0].sunset.slice(11, 13)) * 60));
-          }
-          
-        }
       }
-
-      let barWidth = (periodProgress / periodLength) * 130;
 
       return (
         <div id='sunrise-sunset' className='weather-details-box'>
@@ -602,7 +595,6 @@ class App extends React.Component {
           <div className='divider'></div>
           <div id='sunrise-sunset-container'>
             <div id='sunrise-sunset-time'>{time}</div>
-            <div id='sunrise-sunset-chart'><div id='sunrise-sunset-progress' style={{width: barWidth + "px"}}></div></div>
           </div>
         </div>
       )
@@ -831,7 +823,7 @@ class App extends React.Component {
             <div className='divider'></div>
             <AirQuality/>
           </div>
-          <div id='wind' className='weather-details-box'>
+          <div id='wind' className='weather-details-box' onClick={() => {this.setState({status: "radar-wind"})}}>
             <h1><FontAwesomeIcon icon={faWind} /> WIND</h1>
             <div className='divider'></div>
             <div id='wind-container'>
@@ -859,8 +851,8 @@ class App extends React.Component {
             </div>
           </div>
           <SunriseSunset />
-          <div id='precipitation' className='weather-details-box'>
-            <h1><FontAwesomeIcon icon={faDroplet} /> PRECIPITATION</h1>
+          <div id='precipitation' className='weather-details-box' onClick={() => {this.setState({status: "radar-precipitation"})}}>
+            <h1><FontAwesomeIcon icon={faDroplet}  /> PRECIPITATION</h1>
             <div className='divider'></div>
             <div id='precipitation-container'>
               <div id='precipitation-today'>{this.state.currentWeather.precipitationAmount.toFixed(2)}"<br></br><div id='precipitation-today-label'>Today</div></div>
@@ -875,7 +867,7 @@ class App extends React.Component {
               <div id='apparent-temperature-message'>{getApparentTemperatureMessage()}</div>
               </div>
           </div>
-          <div id='humidity' className='weather-details-box'>
+          <div id='humidity' className='weather-details-box' >
               <h1><FontAwesomeIcon icon={faWater} /> HUMIDITY</h1>
               <div className='divider'></div>
               <div id='humidity-container'>
@@ -898,7 +890,7 @@ class App extends React.Component {
               <div className='divider'></div>
               <div id='visibility-container'>{this.state.currentWeather.visibility} mi</div>
           </div>
-          <div id='pressure' className='weather-details-box'>
+          <div id='pressure' className='weather-details-box' onClick={() => {this.setState({status: "radar-pressure"})}}>
               <h1><FontAwesomeIcon icon={faGauge} /> PRESSURE</h1>
               <div className='divider'></div>
               <div id='pressure-container'>
@@ -1061,7 +1053,7 @@ class App extends React.Component {
         {this.BackgroundImage()}
         <div id='detail-view-container'>
           <div id='top-bar'>
-            <button id='close-button' onClick={() => {this.setState({status: "normal"})}}><FontAwesomeIcon icon={faCircleXmark} /></button>
+            <div id='close-button' onClick={() => {this.setState({status: "normal"})}}><FontAwesomeIcon icon={faCircleXmark} /></div>
             <h1 id='detail-viewer-title'>{getTitle()}</h1>
             <div id='hourly-daily-selector' onClick = {() => {
               let element = document.getElementById("hourly-daily-selector-menu");
@@ -1141,37 +1133,7 @@ class App extends React.Component {
   }
 
   RadarViewer() {
-    const getCurrentRadarType = () => {
-      if (this.state.status === 'radar-default') {
-        return "Radar";
-      } else if (this.state.status === 'radar-temperature') {
-        return "Temperature";
-      } else if (this.state.status === 'radar-wind') {
-        return "Wind";
-      } else if (this.state.status === 'radar-precipitation') {
-        return "Precipitation";
-      } else if (this.state.status === 'radar-clouds') {
-        return "Cloud Cover";
-      } else if (this.state.status === 'radar-pressure') {
-        return "Pressure";
-      }
-    }
-
-    const toggleOptionsVisiblity = () => {
-      let options = document.getElementById("radar-selector-options");
-            if (options.style.display === 'none') {
-              options.style.display = 'block';
-            } else {
-              options.style.display = 'none';
-            }
-    }
-
     const Map = () => {
-      const refreshTime = () => {
-        const d = weatherLayer.getAnimationTimeDate();
-        document.getElementById("radar-time").innerText = d.toString().slice(0, d.toString().indexOf(" GMT"));
-        document.getElementById("radar-slider").value = +d;
-      }
 
       let mapContainer = useRef(null);
       let map = useRef(null);
@@ -1217,63 +1179,16 @@ class App extends React.Component {
             });
           }
 
-          weatherLayer.on("sourceReady", event => {
-            const startDate = weatherLayer.getAnimationStartDate();
-            const endDate = weatherLayer.getAnimationEndDate();
-            const currentDate = weatherLayer.getAnimationTimeDate();
-    
-            let timeSlider = document.getElementById("radar-slider");
-            timeSlider.min = +startDate;
-            timeSlider.max = +endDate;
-            timeSlider.value = +currentDate;
-    
-            refreshTime();
-          });
-
-          weatherLayer.on("animationTimeSet", event => {
-            refreshTime();
-          });
-
-          document.getElementById("radar-slider").addEventListener("input", (evt) => {
-            weatherLayer.setAnimationTime(parseInt(document.getElementById("radar-slider").value / 1000))
-          });
-
           map.current.setPaintProperty("Water", 'fill-color', "rgba(0, 0, 0, 0.4)");
           map.current.addLayer(weatherLayer, 'Water');
-          weatherLayer.animateByFactor(0);
+          weatherLayer.animateByFactor(3600);
         })
       }, [location.longitude, location.latitude, zoom])
-      /*
-      const [playStatus, updatePlayPause] = useState("pause");
 
-      const getPlayPauseIcon = () => {
-        if (playStatus === 'play') {
-          return <FontAwesomeIcon icon={faPause} />
-        } else {
-          return <FontAwesomeIcon icon={faPlay} />
-        }
-      }
-
-      const handlePlayPauseClick = () => {
-        if (playStatus === 'play') {
-          updatePlayPause("pause");
-          weatherLayer.animateByFactor(0);
-        } else {
-          updatePlayPause("play")
-          weatherLayer.animateByFactor(3600);
-        }
-      } */
-
+      
 
       return (
         <div className='large-map-wrap'>
-          <div id='radar-controls'>
-          <div id='radar-controls-top'>
-            <h1>{getCurrentRadarType()}</h1>
-          </div>
-          <input type="range" min="1" max="100" defaultValue="0" className="slider" id="radar-slider"></input>
-          <div id='radar-time'></div>
-          </div>
           <div ref={mapContainer} className='map' />
         </div>
       )
@@ -1281,42 +1196,47 @@ class App extends React.Component {
     return (<div id='container'>
       {this.BackgroundImage()}
       <div id='map-container'>
-        <div id='top-radar-bar'>
-          <div id='close-button' onClick={() => {this.setState({status: "normal"})}}><FontAwesomeIcon icon={faCircleXmark} /></div>
-          <div id='radar-selector' onClick={() => {toggleOptionsVisiblity()}}>{getCurrentRadarType()}<FontAwesomeIcon icon={faAngleDown} /></div>
-        </div>
-        <div id='radar-selector-options'>
+        <Map />
+        <div id='radar-close-button' onClick={() => {this.setState({status: "normal"})}}>Done</div>
+        <div id='radar-selector-button' onClick = {() => {
+          let element = document.getElementById("radar-selector-stack");
+          if (element.style.display === 'none') {
+            element.style.display = 'block';
+          } else {
+            element.style.display = 'none';
+          }
+        }}><FontAwesomeIcon icon={faLayerGroup} /></div>
+        <div id='radar-selector-stack'>
           <div onClick={() => {
             this.setState({status: "radar-default"});
-            toggleOptionsVisiblity();
-            }}>Radar</div>
+            document.getElementById("radar-selector-stack").style.display = 'none';
+          }}><div>Radar</div><FontAwesomeIcon icon={faHurricane} /></div>
           <div className='divider'></div>
           <div onClick={() => {
             this.setState({status: "radar-temperature"});
-            toggleOptionsVisiblity();
-            }}>Temperature</div>
+            document.getElementById("radar-selector-stack").style.display = 'none';
+          }}><div>Temperature</div><FontAwesomeIcon icon={faTemperatureHalf} /></div>
           <div className='divider'></div>
-          <div onClick={
-            () => {this.setState({status: "radar-wind"});
-            toggleOptionsVisiblity();
-            }}>Wind</div>
+          <div onClick={() => {
+            this.setState({status: "radar-wind"});
+            document.getElementById("radar-selector-stack").style.display = 'none';
+          }}><div>Wind</div><FontAwesomeIcon icon={faWind} /></div>
           <div className='divider'></div>
-          <div onClick={
-            () => {this.setState({status: "radar-precipitation"})
-            toggleOptionsVisiblity();
-            }}>Precipitation</div>
+          <div onClick={() => {
+            this.setState({status: "radar-precipitation"});
+            document.getElementById("radar-selector-stack").style.display = 'none';
+          }}><div>Precipitation</div><FontAwesomeIcon icon={faDroplet} /></div>
           <div className='divider'></div>
           <div onClick={() => {
             this.setState({status: "radar-clouds"});
-            toggleOptionsVisiblity();
-            }}>Cloud Cover</div>
+            document.getElementById("radar-selector-stack").style.display = 'none';
+          }}><div>Cloud Cover</div><FontAwesomeIcon icon={faCloud} /></div>
           <div className='divider'></div>
-          <div onClick={
-            () => {this.setState({status: "radar-pressure"});
-            toggleOptionsVisiblity();
-            }}>Pressure</div>
+          <div onClick={() => {
+            this.setState({status: "radar-pressure"});
+            document.getElementById("radar-selector-stack").style.display = 'none';
+          }}><div>Pressure</div><FontAwesomeIcon icon={faGauge} /></div>
         </div>
-        <Map />
       </div>
       
     </div>)
